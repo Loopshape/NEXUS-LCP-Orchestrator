@@ -5,16 +5,18 @@ import { ReadinessIndicator } from './components/ReadinessIndicator';
 import { NexusInput } from './components/NexusInput';
 import { AgentVisualizer } from './components/AgentVisualizer';
 import { SemanticOutput } from './components/SemanticOutput';
+import { AgentModal } from './components/AgentModal';
 import { AGGREGATION_ORDER } from './constants';
 import { queryAgent, generateHashId } from './services/geminiService';
-// Fix: Added missing RefreshCcw import from lucide-react
-import { Terminal, Cpu, Info, RefreshCcw } from 'lucide-react';
+import { Terminal, Cpu, Info, RefreshCcw, Focus, XCircle } from 'lucide-react';
 
 const App: React.FC = () => {
   const [readiness, setReadiness] = useState<Readiness>(Readiness.NULL);
   const [history, setHistory] = useState<SemanticState[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeAgents, setActiveAgents] = useState<AgentRole[]>([]);
+  const [focusedAgent, setFocusedAgent] = useState<AgentRole | null>(null);
+  const [selectedAgentForModal, setSelectedAgentForModal] = useState<AgentRole | null>(null);
 
   // Simulation of the 2π readiness sequence
   useEffect(() => {
@@ -39,14 +41,10 @@ const App: React.FC = () => {
     const agentOutputs: Record<AgentRole, string> = {} as Record<AgentRole, string>;
 
     try {
-      // Parallel Reasoning Engine with Fixed Aggregation Order
-      // We loop through the agents in parallel but update UI to show "active" status
       const promises = AGGREGATION_ORDER.map(async (role) => {
         setActiveAgents(prev => [...prev, role]);
         const output = await queryAgent(role, input, context);
         agentOutputs[role] = output;
-        // In a real system, we might wait for dependencies here, 
-        // but LCP allows parallel snapshots before Work synthesizes.
         return { role, output };
       });
 
@@ -72,8 +70,25 @@ const App: React.FC = () => {
     }
   }, [readiness, isProcessing, history]);
 
+  const handleAgentClick = (role: AgentRole) => {
+    // If clicking an already focused agent, show modal. Otherwise focus.
+    if (focusedAgent === role) {
+      setSelectedAgentForModal(role);
+    } else {
+      setFocusedAgent(role);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-[#0a0a0a] overflow-x-hidden selection:bg-blue-500/30">
+      {/* Agent Details Modal */}
+      {selectedAgentForModal && (
+        <AgentModal 
+          role={selectedAgentForModal} 
+          onClose={() => setSelectedAgentForModal(null)} 
+        />
+      )}
+
       {/* Header / Readiness Bar */}
       <header className="w-full max-w-6xl flex items-center justify-between p-6 z-10">
         <div className="flex items-center gap-3">
@@ -91,7 +106,13 @@ const App: React.FC = () => {
       <main className="flex-grow w-full max-w-6xl px-6 flex flex-col items-center pt-12">
         {history.length === 0 ? (
           <div className="w-full flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-1000">
-            <AgentVisualizer history={history} isProcessing={isProcessing} activeAgents={activeAgents} />
+            <AgentVisualizer 
+              history={history} 
+              isProcessing={isProcessing} 
+              activeAgents={activeAgents} 
+              focusedAgent={focusedAgent}
+              onAgentClick={handleAgentClick}
+            />
             
             <div className="mt-8 mb-12 text-center">
               <h2 className="text-4xl font-light text-white tracking-tight mb-4">
@@ -101,6 +122,20 @@ const App: React.FC = () => {
                 Implement multi-agent ensembles with semantic lineage tracking. 
                 Move beyond stochastic output to verifiable cognitive convergence.
               </p>
+              {focusedAgent && (
+                <div className="mt-6 flex items-center justify-center gap-4 animate-in fade-in zoom-in-95">
+                  <span className="mono text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1 rounded-full flex items-center gap-2">
+                    <Focus size={10} />
+                    FOCUS: {focusedAgent.toUpperCase()}
+                  </span>
+                  <button 
+                    onClick={() => setFocusedAgent(null)}
+                    className="text-neutral-600 hover:text-red-400 transition-colors"
+                  >
+                    <XCircle size={14} />
+                  </button>
+                </div>
+              )}
             </div>
 
             <NexusInput 
@@ -130,16 +165,34 @@ const App: React.FC = () => {
         ) : (
           <div className="w-full flex flex-col items-center pt-8">
             <div className="sticky top-0 bg-[#0a0a0a]/80 backdrop-blur-xl w-full py-6 z-20 flex flex-col items-center border-b border-neutral-900/50 mb-12">
-               <NexusInput 
-                onSend={handlePrompt} 
-                disabled={readiness !== Readiness.TWO_PI} 
-                isProcessing={isProcessing} 
-              />
+               <div className="flex items-center gap-6 w-full max-w-3xl mb-4">
+                  <div className="flex-grow">
+                    <NexusInput 
+                      onSend={handlePrompt} 
+                      disabled={readiness !== Readiness.TWO_PI} 
+                      isProcessing={isProcessing} 
+                    />
+                  </div>
+                  {focusedAgent && (
+                    <button 
+                      onClick={() => setFocusedAgent(null)}
+                      className="mono text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-2 rounded-lg hover:bg-blue-500/20 transition-all flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <XCircle size={12} />
+                      UNFOCUS {focusedAgent}
+                    </button>
+                  )}
+               </div>
             </div>
             
             <div className="w-full flex flex-col items-center gap-2">
               {history.map((state) => (
-                <SemanticOutput key={state.id} state={state} />
+                <SemanticOutput 
+                  key={state.id} 
+                  state={state} 
+                  focusedAgent={focusedAgent} 
+                  onAgentNameClick={(role) => setSelectedAgentForModal(role)}
+                />
               ))}
             </div>
           </div>

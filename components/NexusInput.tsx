@@ -8,9 +8,24 @@ interface Props {
   isProcessing: boolean;
 }
 
+const STORAGE_KEY = 'nexus_lcp_input_history';
+
 export const NexusInput: React.FC<Props> = ({ onSend, disabled, isProcessing }) => {
   const [value, setValue] = useState('');
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!disabled && !isProcessing) {
@@ -21,8 +36,34 @@ export const NexusInput: React.FC<Props> = ({ onSend, disabled, isProcessing }) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (value.trim() && !disabled && !isProcessing) {
+      const newHistory = [value, ...history.filter(h => h !== value)].slice(0, 50);
+      setHistory(newHistory);
+      setHistoryIndex(-1);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+      
       onSend(value);
       setValue('');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const nextIndex = historyIndex + 1;
+      if (nextIndex < history.length) {
+        setHistoryIndex(nextIndex);
+        setValue(history[nextIndex]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = historyIndex - 1;
+      if (nextIndex >= 0) {
+        setHistoryIndex(nextIndex);
+        setValue(history[nextIndex]);
+      } else {
+        setHistoryIndex(-1);
+        setValue('');
+      }
     }
   };
 
@@ -44,7 +85,11 @@ export const NexusInput: React.FC<Props> = ({ onSend, disabled, isProcessing }) 
         ref={inputRef}
         type="text"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setHistoryIndex(-1);
+        }}
+        onKeyDown={handleKeyDown}
         disabled={disabled || isProcessing}
         placeholder={disabled ? "Warming Nexus..." : "Enter logical continuum prompt..."}
         className="w-full bg-[#151515] border border-neutral-800 rounded-full py-4 pl-12 pr-4 text-lg focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder-neutral-600"

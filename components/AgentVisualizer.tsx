@@ -7,9 +7,11 @@ interface Props {
   history: SemanticState[];
   isProcessing: boolean;
   activeAgents: AgentRole[];
+  focusedAgent: AgentRole | null;
+  onAgentClick: (role: AgentRole) => void;
 }
 
-export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, activeAgents }) => {
+export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, activeAgents, focusedAgent, onAgentClick }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -25,6 +27,31 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5
     }));
+
+    const handleCanvasClick = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 120;
+      const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
+
+      AGGREGATION_ORDER.forEach((role, i) => {
+        const angle = i * angleStep - Math.PI / 2;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        
+        // Detect click within a 20px radius of the node
+        const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+        if (dist < 20) {
+          onAgentClick(role);
+        }
+      });
+    };
+
+    canvas.addEventListener('click', handleCanvasClick);
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -62,31 +89,34 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
         const isActive = activeAgents.includes(role);
+        const isFocused = focusedAgent === role;
 
         // Connection to center
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
-        ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(30, 30, 30, 0.5)';
+        ctx.strokeStyle = isFocused ? 'rgba(59, 130, 246, 0.8)' : (isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(30, 30, 30, 0.5)');
+        ctx.lineWidth = isFocused ? 2 : 1;
         ctx.stroke();
 
         // Node
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = isActive ? '#3b82f6' : '#262626';
+        ctx.arc(x, y, isFocused ? 7 : 4, 0, Math.PI * 2);
+        ctx.fillStyle = isFocused ? '#60a5fa' : (isActive ? '#3b82f6' : '#262626');
         ctx.fill();
-        if (isActive) {
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = '#3b82f6';
+        
+        if (isActive || isFocused) {
+          ctx.shadowBlur = isFocused ? 20 : 10;
+          ctx.shadowColor = isFocused ? '#60a5fa' : '#3b82f6';
           ctx.stroke();
           ctx.shadowBlur = 0;
         }
 
         // Label
-        ctx.fillStyle = isActive ? '#fff' : '#525252';
-        ctx.font = '10px JetBrains Mono';
+        ctx.fillStyle = isFocused ? '#fff' : (isActive ? '#fff' : '#525252');
+        ctx.font = isFocused ? 'bold 12px JetBrains Mono' : '10px JetBrains Mono';
         ctx.textAlign = 'center';
-        ctx.fillText(role.toUpperCase(), x, y - 12);
+        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 16 : 12));
       });
 
       // Core anchor
@@ -106,15 +136,23 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
     };
 
     render();
-    return () => cancelAnimationFrame(animationFrame);
-  }, [activeAgents, isProcessing]);
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      canvas.removeEventListener('click', handleCanvasClick);
+    };
+  }, [activeAgents, isProcessing, focusedAgent, onAgentClick]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={600} 
-      height={400} 
-      className="max-w-full h-auto opacity-80"
-    />
+    <div className="relative group cursor-crosshair">
+      <canvas 
+        ref={canvasRef} 
+        width={600} 
+        height={400} 
+        className="max-w-full h-auto opacity-80"
+      />
+      <div className="absolute bottom-4 left-4 mono text-[10px] text-neutral-600 pointer-events-none">
+        INTERACTIVE_TOPOLOGY_V1.0
+      </div>
+    </div>
   );
 };

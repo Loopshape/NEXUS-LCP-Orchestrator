@@ -4,24 +4,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS-LCP | Logical Continuum Protocol</title>
+    <title>NEXUS-LCP | Orchestrator Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --neon-red: #ff003c;
+            --neon-green: #00ff66;
+            --neon-blue: #00e5ff;
+            --neon-yellow: #ffea00;
+            --neon-white: #ffffff;
+        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
+            background: radial-gradient(circle at center, #1a0b2e 0%, #050510 100%);
             color: #e5e5e5;
+            height: 100vh;
+            overflow: hidden;
         }
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Neon Typography */
+        .neon-red { color: var(--neon-red); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5); }
+        .neon-green { color: var(--neon-green); text-shadow: 0 0 10px rgba(0, 255, 102, 0.5); }
+        .neon-blue { color: var(--neon-blue); text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
+        .neon-yellow { color: var(--neon-yellow); text-shadow: 0 0 10px rgba(255, 234, 0, 0.5); }
+        .neon-white { color: var(--neon-white); text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 350px 1fr 400px;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+            gap: 1px;
+            background-color: rgba(255,255,255,0.05);
         }
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.8; }
+
+        .panel {
+            background-color: rgba(5, 5, 15, 0.8);
+            backdrop-blur: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .animate-pulse-slow {
-            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+        @keyframes subtle-glow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        .glow-active { animation: subtle-glow 2s infinite ease-in-out; }
+        
+        .flash-focus {
+            animation: flash 0.5s ease-out;
+        }
+        @keyframes flash {
+            0% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.8); }
+            100% { box-shadow: 0 0 50px 20px rgba(0, 229, 255, 0); }
         }
     </style>
 <script type="importmap">

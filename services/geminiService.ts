@@ -3,7 +3,6 @@ import { GoogleGenAI } from "@google/genai";
 import { AgentRole } from "../types";
 import { AGENT_SYSTEM_PROMPTS } from "../constants";
 
-// Strictly follow SDK initialization using a named parameter and direct process.env.API_KEY access
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export async function queryAgent(
@@ -15,11 +14,10 @@ export async function queryAgent(
   try {
     let systemInstruction = AGENT_SYSTEM_PROMPTS[role];
     
-    // Enhancement: Prepend specific instruction when a focus is active to prioritize cross-agent analysis
     if (focusedAgent && focusedAgent !== role) {
-      systemInstruction = `[CRITICAL FOCUS] As ${role}, prioritize analyzing the output from ${focusedAgent} and its specific implications for the current continuum state. Ensure your reasoning aligns with or constructively challenges the ${focusedAgent} perspective.\n\n${systemInstruction}`;
+      systemInstruction = `[ISOLATION PROTOCOL] As ${role}, prioritize analyzing the output from ${focusedAgent} and its implications for the current continuum state. Integrate their logic into your own domain-specific reasoning to verify cross-agent consistency.\n\n${systemInstruction}`;
     } else if (focusedAgent === role) {
-      systemInstruction = `[ISOLATION MODE] You are currently the focused agent. Provide maximum depth and technical precision in your ${role} domain. The rest of the ensemble is monitoring your trace specifically.\n\n${systemInstruction}`;
+      systemInstruction = `[PRIMARY FOCUS] You are currently the focused agent in the ensemble. Provide maximum depth, technical precision, and traceable logic. All other agents will be verifying your output.\n\n${systemInstruction}`;
     }
 
     const response = await ai.models.generateContent({

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SemanticState, AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
 import { Lock, Unlock } from 'lucide-react';
@@ -11,19 +11,23 @@ interface Props {
   focusedAgent: AgentRole | null;
   isFocusLocked: boolean;
   onAgentClick: (role: AgentRole) => void;
+  onAgentDblClick: (role: AgentRole) => void;
   onBackgroundClick: () => void;
 }
 
 export const AgentVisualizer: React.FC<Props> = ({ 
-  history, 
-  isProcessing, 
-  activeAgents, 
-  focusedAgent, 
-  isFocusLocked,
-  onAgentClick, 
-  onBackgroundClick 
+  history, isProcessing, activeAgents, focusedAgent, isFocusLocked, onAgentClick, onAgentDblClick, onBackgroundClick 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [flashNode, setFlashNode] = useState<AgentRole | null>(null);
+
+  useEffect(() => {
+    if (focusedAgent) {
+      setFlashNode(focusedAgent);
+      const timer = setTimeout(() => setFlashNode(null), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [focusedAgent]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,79 +36,46 @@ export const AgentVisualizer: React.FC<Props> = ({
     if (!ctx) return;
 
     let animationFrame: number;
-    const dots: { x: number, y: number, vx: number, vy: number }[] = Array.from({ length: 20 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4
-    }));
 
-    const handleCanvasClick = (e: MouseEvent) => {
+    const handleMouseAction = (e: MouseEvent, type: 'click' | 'dblclick') => {
       const rect = canvas.getBoundingClientRect();
       const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
       const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
-
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-      const radius = 120;
+      const radius = 100;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
-      let clickedAgent = false;
+      let hit = false;
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
-        
         const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
-        if (dist < 40) { 
-          onAgentClick(role);
-          clickedAgent = true;
+        if (dist < 25) {
+          if (type === 'click') onAgentClick(role);
+          else onAgentDblClick(role);
+          hit = true;
         }
       });
-
-      if (!clickedAgent) {
-        onBackgroundClick();
-      }
+      if (!hit && type === 'click') onBackgroundClick();
     };
 
-    canvas.addEventListener('mousedown', handleCanvasClick);
+    const onClick = (e: MouseEvent) => handleMouseAction(e, 'click');
+    const onDblClick = (e: MouseEvent) => handleMouseAction(e, 'dblclick');
+
+    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('dblclick', onDblClick);
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const time = Date.now();
-      
-      // Ambient background network
-      ctx.strokeStyle = '#111';
-      ctx.lineWidth = 1;
-      dots.forEach((dot, i) => {
-        dot.x += dot.vx;
-        dot.y += dot.vy;
-        if (dot.x < 0 || dot.x > canvas.width) dot.vx *= -1;
-        if (dot.y < 0 || dot.y > canvas.height) dot.vy *= -1;
-
-        dots.slice(i + 1).forEach(other => {
-          const dx = dot.x - other.x;
-          const dy = dot.y - other.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 180) {
-            ctx.beginPath();
-            ctx.moveTo(dot.x, dot.y);
-            ctx.lineTo(other.x, other.y);
-            ctx.stroke();
-          }
-        });
-      });
-
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-      const radius = 120;
+      const radius = 100;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
-      // Pulse calculations
-      const pulseScale = 1 + Math.sin(time / 400) * 0.1;
-      const haloOpacity = 0.15 + Math.sin(time / 600) * 0.1;
-
-      // Lines
+      // Lines & Connection Pulse
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -112,31 +83,28 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
 
-        // Subtle pulsing halo around connections of focused agent
-        if (isFocused) {
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY);
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = `rgba(59, 130, 246, ${haloOpacity * 0.5})`;
-          ctx.lineWidth = 12;
-          ctx.stroke();
-        }
-
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
         if (isFocused) {
-          ctx.strokeStyle = isFocusLocked ? '#60a5fa' : '#3b82f6';
-          ctx.lineWidth = isFocusLocked ? 6 : 4;
-          ctx.setLineDash([10, 5]);
-          ctx.lineDashOffset = -time / 50;
+          const dashOffset = -time / 50;
+          ctx.setLineDash([8, 4]);
+          ctx.lineDashOffset = dashOffset;
+          ctx.strokeStyle = isFocusLocked ? '#ffea00' : '#00e5ff';
+          ctx.lineWidth = 3;
+          
+          // Outer Glow Pulse for focus
+          ctx.shadowBlur = 10 + Math.sin(time / 200) * 5;
+          ctx.shadowColor = isFocusLocked ? 'rgba(255, 234, 0, 0.5)' : 'rgba(0, 229, 255, 0.5)';
         } else {
-          ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(30, 30, 30, 0.5)';
-          ctx.lineWidth = isActive ? 2 : 1;
           ctx.setLineDash([]);
+          ctx.strokeStyle = isActive ? 'rgba(0, 229, 255, 0.3)' : 'rgba(255, 255, 255, 0.05)';
+          ctx.lineWidth = isActive ? 1.5 : 1;
+          ctx.shadowBlur = 0;
         }
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
       });
 
       // Nodes
@@ -146,63 +114,47 @@ export const AgentVisualizer: React.FC<Props> = ({
         const y = centerY + Math.sin(angle) * radius;
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
+        const isFlashing = flashNode === role;
 
         if (isFocused) {
           // Pulsing Halo
+          const haloR = 25 + Math.sin(time / 300) * 5;
           ctx.beginPath();
-          ctx.arc(x, y, 35 * pulseScale, 0, Math.PI * 2);
-          const gradient = ctx.createRadialGradient(x, y, 10, x, y, 35 * pulseScale);
-          gradient.addColorStop(0, `rgba(59, 130, 246, ${haloOpacity})`);
-          gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
-          ctx.fillStyle = gradient;
+          ctx.arc(x, y, haloR, 0, Math.PI * 2);
+          ctx.fillStyle = isFocusLocked ? 'rgba(255, 234, 0, 0.1)' : 'rgba(0, 229, 255, 0.1)';
           ctx.fill();
         }
 
-        // Core Circle
         ctx.beginPath();
-        ctx.arc(x, y, isFocused ? 14 : (isActive ? 8 : 6), 0, Math.PI * 2);
-        ctx.fillStyle = isFocused ? '#3b82f6' : (isActive ? '#3b82f6' : '#1a1a1a');
+        ctx.arc(x, y, isFocused ? 12 : (isActive ? 8 : 6), 0, Math.PI * 2);
+        ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffea00' : '#00e5ff') : (isActive ? '#00e5ff' : '#1a1a1a');
         ctx.fill();
         
-        if (isFocused) {
-          ctx.beginPath();
-          ctx.arc(x, y, 6, 0, Math.PI * 2);
-          ctx.fillStyle = isFocusLocked ? '#fff' : 'rgba(255, 255, 255, 0.8)';
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.arc(x, y, 22 + Math.sin(time / 150) * 4, 0, Math.PI * 2);
-          ctx.strokeStyle = isFocusLocked ? '#fff' : '#3b82f6';
-          ctx.lineWidth = isFocusLocked ? 3 : 2;
-          ctx.stroke();
-
-          ctx.strokeStyle = isFocusLocked ? 'rgba(255, 255, 255, 0.2)' : 'rgba(59, 130, 246, 0.3)';
-          ctx.strokeRect(x - 28, y - 28, 56, 56);
-        } else if (isActive) {
+        if (isFocused || isActive) {
           ctx.strokeStyle = '#fff';
           ctx.lineWidth = 1;
           ctx.stroke();
         }
 
-        // Label
-        ctx.fillStyle = isFocused ? '#fff' : (isActive ? '#fff' : '#444');
-        ctx.font = isFocused ? 'bold 12px JetBrains Mono' : '10px JetBrains Mono';
+        if (isFlashing) {
+          ctx.beginPath();
+          ctx.arc(x, y, 20, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.stroke();
+        }
+
+        // Labels
+        ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffea00' : '#00e5ff') : (isActive ? '#fff' : '#444');
+        ctx.font = isFocused ? 'bold 10px JetBrains Mono' : '8px JetBrains Mono';
         ctx.textAlign = 'center';
-        ctx.fillText(role.toUpperCase() + (isFocused && isFocusLocked ? ' [LOCKED]' : ''), x, y - (isFocused ? 36 : 18));
+        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 24 : 14));
       });
 
-      // Central core hub
+      // Hub
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 12, 0, Math.PI * 2);
-      ctx.fillStyle = isProcessing ? '#3b82f6' : '#222';
+      ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+      ctx.fillStyle = isProcessing ? '#00ff66' : '#222';
       ctx.fill();
-      if (isProcessing) {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 20 + Math.sin(time / 100) * 5, 0, Math.PI * 2);
-        ctx.stroke();
-      }
 
       animationFrame = requestAnimationFrame(render);
     };
@@ -210,42 +162,34 @@ export const AgentVisualizer: React.FC<Props> = ({
     render();
     return () => {
       cancelAnimationFrame(animationFrame);
-      canvas.removeEventListener('mousedown', handleCanvasClick);
+      canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('dblclick', onDblClick);
     };
-  }, [activeAgents, isProcessing, focusedAgent, isFocusLocked, onAgentClick, onBackgroundClick]);
+  }, [activeAgents, isProcessing, focusedAgent, isFocusLocked, flashNode]);
 
   return (
-    <div className="relative group cursor-crosshair select-none bg-black/20 rounded-3xl border border-neutral-900/50 p-4">
-      <canvas 
-        ref={canvasRef} 
-        width={600} 
-        height={400} 
-        className="max-w-full h-auto opacity-100 transition-all drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-      />
-      
-      {/* Visual Indicator in Title Area */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        <div className={`px-5 py-2 rounded-full border-2 backdrop-blur-md transition-all duration-500 flex items-center gap-3 ${focusedAgent ? (isFocusLocked ? 'bg-blue-600 border-white text-white' : 'bg-blue-600/10 border-blue-500 text-white') : 'bg-black/40 border-neutral-800 text-neutral-600'}`}>
-          {isFocusLocked ? <Lock size={12} className="animate-pulse" /> : (focusedAgent ? <Unlock size={12} /> : <div className={`w-2 h-2 rounded-full ${focusedAgent ? 'bg-blue-400 animate-pulse' : 'bg-neutral-800'}`} />)}
-          <span className="mono text-[11px] font-black tracking-widest uppercase">
-            {focusedAgent ? (isFocusLocked ? `FOCUS_LOCKED: ${focusedAgent}` : `LCP_ISOLATION: ${focusedAgent}`) : 'SYSTEM_STATE: NOMINAL'}
+    <div className="relative w-full h-full flex flex-col items-center justify-center panel p-4">
+      <div className="absolute top-4 left-4 flex flex-col gap-1">
+        <div className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 bg-yellow-500/10' : 'border-blue-500 bg-blue-500/10') : 'border-white/5 bg-white/5'}`}>
+          {isFocusLocked ? <Lock size={10} className="neon-yellow" /> : <Unlock size={10} className={focusedAgent ? "neon-blue" : "text-neutral-500"} />}
+          <span className={`mono text-[9px] font-black uppercase tracking-widest ${isFocusLocked ? 'neon-yellow' : (focusedAgent ? 'neon-blue' : 'text-neutral-500')}`}>
+            {focusedAgent ? (isFocusLocked ? 'LOCKED' : 'ISOLATED') : 'NOMINAL'}
           </span>
         </div>
         {focusedAgent && (
-          <div className="text-[9px] mono text-blue-500/70 font-bold tracking-widest animate-in fade-in slide-in-from-top-1">
-            {isFocusLocked ? 'ENVELOPE_REINFORCED' : 'TRACE_EXTRACTION_ACTIVE'}
-          </div>
+          <span className="mono text-[8px] neon-blue animate-pulse pl-2 font-bold uppercase">{focusedAgent} ACTIVE_PROBE</span>
         )}
       </div>
 
-      <div className="absolute bottom-6 left-6 mono text-[10px] text-neutral-700 tracking-[0.2em] font-bold">
-        LCP_RUNTIME_TOPOLOGY_v1.5
-      </div>
+      <canvas ref={canvasRef} width={300} height={300} className="w-full h-auto max-w-[300px]" />
       
-      <div className="absolute bottom-6 right-6 mono text-[9px] text-neutral-800 max-w-[140px] text-right leading-relaxed">
-        NODE: TOGGLE_FOCUS<br/>
-        DOUBLE_CLICK: LOCK_FOCUS<br/>
-        CANVAS: RESET_VIEW
+      <div className="mt-4 w-full grid grid-cols-4 gap-2">
+        {AGGREGATION_ORDER.map(role => (
+          <div key={role} className={`flex flex-col items-center gap-1 p-2 rounded border transition-all cursor-pointer ${focusedAgent === role ? (isFocusLocked ? 'border-yellow-500 bg-yellow-500/10' : 'border-blue-500 bg-blue-500/10') : 'border-white/5 hover:bg-white/5'}`} onClick={() => onAgentClick(role)}>
+            <div className={`w-1 h-1 rounded-full ${activeAgents.includes(role) ? 'bg-green-500 shadow-[0_0_5px_#00ff66]' : 'bg-neutral-800'}`} />
+            <span className={`mono text-[8px] font-black ${focusedAgent === role ? (isFocusLocked ? 'neon-yellow' : 'neon-blue') : 'text-neutral-600'}`}>{role}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

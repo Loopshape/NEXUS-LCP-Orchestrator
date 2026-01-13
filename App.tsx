@@ -8,7 +8,7 @@ import { SemanticOutput } from './components/SemanticOutput';
 import { AgentModal } from './components/AgentModal';
 import { AGGREGATION_ORDER } from './constants';
 import { queryAgent, generateHashId } from './services/geminiService';
-import { Terminal, Cpu, Info, RefreshCcw, Focus, XCircle, History, Sparkles } from 'lucide-react';
+import { Terminal, Cpu, Info, RefreshCcw, Focus, XCircle, History, Sparkles, Lock } from 'lucide-react';
 
 const App: React.FC = () => {
   const [readiness, setReadiness] = useState<Readiness>(Readiness.NULL);
@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeAgents, setActiveAgents] = useState<AgentRole[]>([]);
   const [focusedAgent, setFocusedAgent] = useState<AgentRole | null>(null);
+  const [isFocusLocked, setIsFocusLocked] = useState(false);
   const [selectedAgentForModal, setSelectedAgentForModal] = useState<AgentRole | null>(null);
 
   // Simulation of the 2π readiness sequence
@@ -43,7 +44,8 @@ const App: React.FC = () => {
     try {
       const promises = AGGREGATION_ORDER.map(async (role) => {
         setActiveAgents(prev => [...prev, role]);
-        const output = await queryAgent(role, input, context);
+        // Pass the current focus state to the agent query for context-aware reasoning
+        const output = await queryAgent(role, input, context, focusedAgent);
         agentOutputs[role] = output;
         return { role, output };
       });
@@ -72,12 +74,20 @@ const App: React.FC = () => {
   }, [readiness, isProcessing, history, focusedAgent]);
 
   const handleAgentClick = (role: AgentRole) => {
-    // Toggle focus: if already focused, clear it. Otherwise, set it.
-    setFocusedAgent(prev => prev === role ? null : role);
+    // If clicking focused agent, lock it.
+    if (focusedAgent === role) {
+      setIsFocusLocked(true);
+    } else {
+      // If locked, clicking another node does nothing until manually cleared or clicked background
+      if (!isFocusLocked) {
+        setFocusedAgent(role);
+      }
+    }
   };
 
   const handleBackgroundClick = () => {
     setFocusedAgent(null);
+    setIsFocusLocked(false);
   };
 
   const openAgentModal = (role: AgentRole) => {
@@ -86,6 +96,7 @@ const App: React.FC = () => {
 
   const reapplyFocus = (role: AgentRole | null) => {
     setFocusedAgent(role);
+    setIsFocusLocked(false); // Reapplying historical focus doesn't auto-lock
   };
 
   return (
@@ -94,6 +105,7 @@ const App: React.FC = () => {
       {selectedAgentForModal && (
         <AgentModal 
           role={selectedAgentForModal} 
+          isFocused={focusedAgent === selectedAgentForModal}
           onClose={() => setSelectedAgentForModal(null)} 
         />
       )}
@@ -105,7 +117,7 @@ const App: React.FC = () => {
             <Cpu className="w-6 h-6 text-blue-500" />
           </div>
           <div>
-            <h1 className="mono text-lg font-black tracking-tighter text-white">NEXUS-LCP <span className="text-neutral-700 font-normal">v1.5</span></h1>
+            <h1 className="mono text-lg font-black tracking-tighter text-white">NEXUS-LCP <span className="text-neutral-700 font-normal">v1.5.1</span></h1>
             <p className="text-[10px] text-neutral-600 mono uppercase tracking-[0.5em] font-bold">Logical Continuum Protocol</p>
           </div>
         </div>
@@ -120,6 +132,7 @@ const App: React.FC = () => {
               isProcessing={isProcessing} 
               activeAgents={activeAgents} 
               focusedAgent={focusedAgent}
+              isFocusLocked={isFocusLocked}
               onAgentClick={handleAgentClick}
               onBackgroundClick={handleBackgroundClick}
             />
@@ -136,16 +149,16 @@ const App: React.FC = () => {
               <div className="mt-12 flex items-center justify-center gap-8">
                 {focusedAgent ? (
                   <div className="flex items-center gap-6 animate-in fade-in zoom-in-95 duration-500">
-                    <div className="mono text-xs bg-blue-600/10 border-2 border-blue-500/50 text-blue-100 px-6 py-3 rounded-2xl flex items-center gap-4 shadow-2xl backdrop-blur-md">
-                      <Focus size={18} className="text-blue-400 animate-pulse" />
-                      ROLE_EXTRACTION_ACTIVE: <span className="font-black text-white underline decoration-blue-500/50 underline-offset-4">{focusedAgent.toUpperCase()}</span>
+                    <div className={`mono text-xs ${isFocusLocked ? 'bg-blue-600 border-white text-white' : 'bg-blue-600/10 border-blue-500/50 text-blue-100'} border-2 px-6 py-3 rounded-2xl flex items-center gap-4 shadow-2xl backdrop-blur-md transition-all`}>
+                      {isFocusLocked ? <Lock size={16} /> : <Focus size={18} className="text-blue-400 animate-pulse" />}
+                      {isFocusLocked ? 'FOCUS_LOCK_ENGAGED:' : 'ROLE_EXTRACTION_ACTIVE:'} <span className="font-black underline decoration-blue-500/50 underline-offset-4">{focusedAgent.toUpperCase()}</span>
                     </div>
                     <button 
-                      onClick={() => setFocusedAgent(null)}
+                      onClick={() => { setFocusedAgent(null); setIsFocusLocked(false); }}
                       className="text-neutral-500 hover:text-white transition-all flex items-center gap-2 group bg-neutral-900/50 px-4 py-3 rounded-2xl border border-neutral-800"
                     >
                       <XCircle size={18} className="group-hover:rotate-90 transition-transform" />
-                      <span className="text-[10px] mono font-black tracking-widest">CLEAR_FOCUS</span>
+                      <span className="text-[10px] mono font-black tracking-widest uppercase">Clear Focus</span>
                     </button>
                   </div>
                 ) : (
@@ -194,11 +207,11 @@ const App: React.FC = () => {
                   </div>
                   {focusedAgent && (
                     <button 
-                      onClick={() => setFocusedAgent(null)}
-                      className="mono text-xs bg-blue-600/10 border-2 border-blue-500/40 text-blue-100 px-6 py-4 rounded-[1.25rem] hover:bg-blue-600/20 transition-all flex items-center gap-4 whitespace-nowrap shadow-[0_0_30px_rgba(59,130,246,0.1)] animate-in slide-in-from-right-8"
+                      onClick={() => { setFocusedAgent(null); setIsFocusLocked(false); }}
+                      className={`mono text-xs ${isFocusLocked ? 'bg-blue-600 border-white text-white' : 'bg-blue-600/10 border-blue-500/40 text-blue-100'} border-2 px-6 py-4 rounded-[1.25rem] hover:opacity-90 transition-all flex items-center gap-4 whitespace-nowrap shadow-[0_0_30px_rgba(59,130,246,0.1)] animate-in slide-in-from-right-8`}
                     >
-                      <XCircle size={20} />
-                      CLEAR_FOCUS: {focusedAgent.toUpperCase()}
+                      {isFocusLocked ? <Lock size={20} /> : <XCircle size={20} />}
+                      {isFocusLocked ? `LOCKED: ${focusedAgent.toUpperCase()}` : `CLEAR: ${focusedAgent.toUpperCase()}`}
                     </button>
                   )}
                </div>
@@ -235,7 +248,7 @@ const App: React.FC = () => {
             Nexus Architecture Working Group
           </div>
           <div className="mono text-[9px] text-neutral-800 uppercase tracking-widest font-bold">
-            Project: Logical Continuum Protocol // Release: Stable_1.5.0
+            Project: Logical Continuum Protocol // Release: Stable_1.5.1
           </div>
         </div>
       </footer>

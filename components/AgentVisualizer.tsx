@@ -2,17 +2,27 @@
 import React, { useEffect, useRef } from 'react';
 import { SemanticState, AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
+import { Lock, Unlock } from 'lucide-react';
 
 interface Props {
   history: SemanticState[];
   isProcessing: boolean;
   activeAgents: AgentRole[];
   focusedAgent: AgentRole | null;
+  isFocusLocked: boolean;
   onAgentClick: (role: AgentRole) => void;
   onBackgroundClick: () => void;
 }
 
-export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, activeAgents, focusedAgent, onAgentClick, onBackgroundClick }) => {
+export const AgentVisualizer: React.FC<Props> = ({ 
+  history, 
+  isProcessing, 
+  activeAgents, 
+  focusedAgent, 
+  isFocusLocked,
+  onAgentClick, 
+  onBackgroundClick 
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -61,6 +71,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now();
       
       // Ambient background network
       ctx.strokeStyle = '#111';
@@ -89,6 +100,10 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
       const radius = 120;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
+      // Pulse calculations
+      const pulseScale = 1 + Math.sin(time / 400) * 0.1;
+      const haloOpacity = 0.15 + Math.sin(time / 600) * 0.1;
+
       // Lines
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
@@ -97,14 +112,24 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
 
+        // Subtle pulsing halo around connections of focused agent
+        if (isFocused) {
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = `rgba(59, 130, 246, ${haloOpacity * 0.5})`;
+          ctx.lineWidth = 12;
+          ctx.stroke();
+        }
+
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
         if (isFocused) {
-          ctx.strokeStyle = '#3b82f6';
-          ctx.lineWidth = 4;
+          ctx.strokeStyle = isFocusLocked ? '#60a5fa' : '#3b82f6';
+          ctx.lineWidth = isFocusLocked ? 6 : 4;
           ctx.setLineDash([10, 5]);
-          ctx.lineDashOffset = -Date.now() / 50;
+          ctx.lineDashOffset = -time / 50;
         } else {
           ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(30, 30, 30, 0.5)';
           ctx.lineWidth = isActive ? 2 : 1;
@@ -122,6 +147,17 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
 
+        if (isFocused) {
+          // Pulsing Halo
+          ctx.beginPath();
+          ctx.arc(x, y, 35 * pulseScale, 0, Math.PI * 2);
+          const gradient = ctx.createRadialGradient(x, y, 10, x, y, 35 * pulseScale);
+          gradient.addColorStop(0, `rgba(59, 130, 246, ${haloOpacity})`);
+          gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+          ctx.fillStyle = gradient;
+          ctx.fill();
+        }
+
         // Core Circle
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 14 : (isActive ? 8 : 6), 0, Math.PI * 2);
@@ -129,21 +165,18 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         ctx.fill();
         
         if (isFocused) {
-          // Inner detail
           ctx.beginPath();
           ctx.arc(x, y, 6, 0, Math.PI * 2);
-          ctx.fillStyle = '#fff';
+          ctx.fillStyle = isFocusLocked ? '#fff' : 'rgba(255, 255, 255, 0.8)';
           ctx.fill();
 
-          // Outer scanning ring
           ctx.beginPath();
-          ctx.arc(x, y, 22 + Math.sin(Date.now() / 150) * 4, 0, Math.PI * 2);
-          ctx.strokeStyle = '#3b82f6';
-          ctx.lineWidth = 2;
+          ctx.arc(x, y, 22 + Math.sin(time / 150) * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = isFocusLocked ? '#fff' : '#3b82f6';
+          ctx.lineWidth = isFocusLocked ? 3 : 2;
           ctx.stroke();
 
-          // Square bounds
-          ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+          ctx.strokeStyle = isFocusLocked ? 'rgba(255, 255, 255, 0.2)' : 'rgba(59, 130, 246, 0.3)';
           ctx.strokeRect(x - 28, y - 28, 56, 56);
         } else if (isActive) {
           ctx.strokeStyle = '#fff';
@@ -155,7 +188,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         ctx.fillStyle = isFocused ? '#fff' : (isActive ? '#fff' : '#444');
         ctx.font = isFocused ? 'bold 12px JetBrains Mono' : '10px JetBrains Mono';
         ctx.textAlign = 'center';
-        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 36 : 18));
+        ctx.fillText(role.toUpperCase() + (isFocused && isFocusLocked ? ' [LOCKED]' : ''), x, y - (isFocused ? 36 : 18));
       });
 
       // Central core hub
@@ -167,7 +200,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         ctx.lineWidth = 2;
         ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 20 + Math.sin(Date.now() / 100) * 5, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, 20 + Math.sin(time / 100) * 5, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -179,7 +212,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
       cancelAnimationFrame(animationFrame);
       canvas.removeEventListener('mousedown', handleCanvasClick);
     };
-  }, [activeAgents, isProcessing, focusedAgent, onAgentClick, onBackgroundClick]);
+  }, [activeAgents, isProcessing, focusedAgent, isFocusLocked, onAgentClick, onBackgroundClick]);
 
   return (
     <div className="relative group cursor-crosshair select-none bg-black/20 rounded-3xl border border-neutral-900/50 p-4">
@@ -192,15 +225,15 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
       
       {/* Visual Indicator in Title Area */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        <div className={`px-5 py-2 rounded-full border-2 backdrop-blur-md transition-all duration-500 flex items-center gap-3 ${focusedAgent ? 'bg-blue-600/10 border-blue-500 text-white scale-105 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'bg-black/40 border-neutral-800 text-neutral-600'}`}>
-          <div className={`w-2 h-2 rounded-full ${focusedAgent ? 'bg-blue-400 animate-pulse' : 'bg-neutral-800'}`} />
+        <div className={`px-5 py-2 rounded-full border-2 backdrop-blur-md transition-all duration-500 flex items-center gap-3 ${focusedAgent ? (isFocusLocked ? 'bg-blue-600 border-white text-white' : 'bg-blue-600/10 border-blue-500 text-white') : 'bg-black/40 border-neutral-800 text-neutral-600'}`}>
+          {isFocusLocked ? <Lock size={12} className="animate-pulse" /> : (focusedAgent ? <Unlock size={12} /> : <div className={`w-2 h-2 rounded-full ${focusedAgent ? 'bg-blue-400 animate-pulse' : 'bg-neutral-800'}`} />)}
           <span className="mono text-[11px] font-black tracking-widest uppercase">
-            {focusedAgent ? `LCP_ISOLATION: ${focusedAgent}` : 'SYSTEM_STATE: NOMINAL'}
+            {focusedAgent ? (isFocusLocked ? `FOCUS_LOCKED: ${focusedAgent}` : `LCP_ISOLATION: ${focusedAgent}`) : 'SYSTEM_STATE: NOMINAL'}
           </span>
         </div>
         {focusedAgent && (
           <div className="text-[9px] mono text-blue-500/70 font-bold tracking-widest animate-in fade-in slide-in-from-top-1">
-            TRACE_EXTRACTION_ACTIVE
+            {isFocusLocked ? 'ENVELOPE_REINFORCED' : 'TRACE_EXTRACTION_ACTIVE'}
           </div>
         )}
       </div>
@@ -211,8 +244,8 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
       
       <div className="absolute bottom-6 right-6 mono text-[9px] text-neutral-800 max-w-[140px] text-right leading-relaxed">
         NODE: TOGGLE_FOCUS<br/>
-        CANVAS: RESET_VIEW<br/>
-        DEPTH: {history.length} ANCHORS
+        DOUBLE_CLICK: LOCK_FOCUS<br/>
+        CANVAS: RESET_VIEW
       </div>
     </div>
   );

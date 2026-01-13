@@ -39,4 +39,5 @@ export interface NexusState {
   currentInput: string;
   isProcessing: boolean;
   activeAgents: AgentRole[];
+  isFocusLocked?: boolean;
 }

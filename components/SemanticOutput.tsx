@@ -2,7 +2,7 @@
 import React from 'react';
 import { SemanticState, AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
-import { ChevronDown, ChevronUp, Database, Focus, Filter, User, Info, Target, Eye } from 'lucide-react';
+import { ChevronDown, ChevronUp, Database, Focus, Filter, User, Info, Target, Eye, Crosshair } from 'lucide-react';
 
 interface Props {
   state: SemanticState;
@@ -75,9 +75,16 @@ export const SemanticOutput: React.FC<Props> = ({ state, focusedAgent, onAgentNa
         </div>
 
         <div className="prose prose-invert max-w-none mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="mono text-[10px] text-blue-500 uppercase tracking-[0.5em] font-black">Synthesis Matrix (WORK)</div>
-            <div className="h-px flex-grow bg-blue-900/40" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="mono text-[10px] text-blue-500 uppercase tracking-[0.5em] font-black">Synthesis Matrix (WORK)</div>
+              <div className="h-px w-24 bg-blue-900/40" />
+            </div>
+            {focusedAgent && (
+              <div className="text-[9px] mono text-neutral-600 bg-neutral-900 px-2 py-0.5 rounded">
+                TRACED AGAINST: {focusedAgent.toUpperCase()}
+              </div>
+            )}
           </div>
           <div className="bg-gradient-to-r from-blue-900/10 to-transparent p-1 rounded-r-lg">
             <p className="text-xl leading-relaxed text-white font-light tracking-tight selection:bg-blue-500/40">
@@ -117,6 +124,9 @@ export const SemanticOutput: React.FC<Props> = ({ state, focusedAgent, onAgentNa
                     >
                       <div className={`w-2.5 h-2.5 rounded-full ${focusedAgent === role ? 'bg-blue-400' : 'bg-neutral-800 group-hover/btn:bg-neutral-600'}`} />
                       <span className="mono text-xs font-black text-neutral-200 uppercase tracking-widest">{role}</span>
+                      {focusedAgent === role && (
+                        <Crosshair size={12} className="text-blue-400 animate-pulse" />
+                      )}
                     </button>
                     <div className="flex gap-2">
                       <button 

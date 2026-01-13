@@ -24,6 +24,7 @@ export interface SemanticState {
   content: string;
   agentOutputs: Record<AgentRole, string>;
   isConverged: boolean;
+  focusedAgentAtCreation?: AgentRole | null;
 }
 
 export enum Readiness {

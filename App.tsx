@@ -58,7 +58,8 @@ const App: React.FC = () => {
         content: input,
         agentOutputs,
         isConverged: !agentOutputs[AgentRole.LOOP].toLowerCase().includes('drift') && 
-                     !agentOutputs[AgentRole.LOOP].toLowerCase().includes('contradiction')
+                     !agentOutputs[AgentRole.LOOP].toLowerCase().includes('contradiction'),
+        focusedAgentAtCreation: focusedAgent
       };
 
       setHistory(prev => [newState, ...prev]);
@@ -68,12 +69,12 @@ const App: React.FC = () => {
       setIsProcessing(false);
       setActiveAgents([]);
     }
-  }, [readiness, isProcessing, history]);
+  }, [readiness, isProcessing, history, focusedAgent]);
 
   const handleAgentClick = (role: AgentRole) => {
-    // Distinguish between focusing and opening modal
+    // Toggle focus: if already focused, clear it. Otherwise, set it.
     if (focusedAgent === role) {
-      setSelectedAgentForModal(role);
+      setFocusedAgent(null);
     } else {
       setFocusedAgent(role);
     }
@@ -84,7 +85,7 @@ const App: React.FC = () => {
   };
 
   const openAgentModal = (role: AgentRole) => {
-    setFocusedAgent(role); // Focus the agent as well when selecting for modal view
+    setFocusedAgent(role); // Focus automatically when inspecting
     setSelectedAgentForModal(role);
   };
 
@@ -136,7 +137,7 @@ const App: React.FC = () => {
                 <div className="mt-6 flex items-center justify-center gap-4 animate-in fade-in zoom-in-95">
                   <span className="mono text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1 rounded-full flex items-center gap-2">
                     <Focus size={10} />
-                    FOCUS_ACTIVE: {focusedAgent.toUpperCase()}
+                    ISOLATION_FILTER: {focusedAgent.toUpperCase()}
                   </span>
                   <button 
                     onClick={() => setFocusedAgent(null)}

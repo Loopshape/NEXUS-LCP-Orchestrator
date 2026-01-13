@@ -79,6 +79,10 @@ const App: React.FC = () => {
     }
   };
 
+  const handleBackgroundClick = () => {
+    setFocusedAgent(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-[#0a0a0a] overflow-x-hidden selection:bg-blue-500/30">
       {/* Agent Details Modal */}
@@ -112,6 +116,7 @@ const App: React.FC = () => {
               activeAgents={activeAgents} 
               focusedAgent={focusedAgent}
               onAgentClick={handleAgentClick}
+              onBackgroundClick={handleBackgroundClick}
             />
             
             <div className="mt-8 mb-12 text-center">

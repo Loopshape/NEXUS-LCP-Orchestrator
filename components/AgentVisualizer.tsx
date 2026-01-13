@@ -9,9 +9,10 @@ interface Props {
   activeAgents: AgentRole[];
   focusedAgent: AgentRole | null;
   onAgentClick: (role: AgentRole) => void;
+  onBackgroundClick: () => void;
 }
 
-export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, activeAgents, focusedAgent, onAgentClick }) => {
+export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, activeAgents, focusedAgent, onAgentClick, onBackgroundClick }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -30,28 +31,33 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
 
     const handleCanvasClick = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+      const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = 120;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
+      let clickedAgent = false;
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
         
-        // Detect click within a 20px radius of the node
         const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
-        if (dist < 20) {
+        if (dist < 25) {
           onAgentClick(role);
+          clickedAgent = true;
         }
       });
+
+      if (!clickedAgent) {
+        onBackgroundClick();
+      }
     };
 
-    canvas.addEventListener('click', handleCanvasClick);
+    canvas.addEventListener('mousedown', handleCanvasClick);
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -78,12 +84,12 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         });
       });
 
-      // Draw active agents constellation
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = 120;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
+      // Draw active agents constellation
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -91,32 +97,52 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
 
-        // Connection to center
+        // Connection line
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
-        ctx.strokeStyle = isFocused ? 'rgba(59, 130, 246, 0.8)' : (isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(30, 30, 30, 0.5)');
-        ctx.lineWidth = isFocused ? 2 : 1;
+        if (isFocused) {
+          ctx.strokeStyle = '#3b82f6';
+          ctx.lineWidth = 3;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
+        } else {
+          ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.3)' : 'rgba(30, 30, 30, 0.4)';
+          ctx.lineWidth = 1;
+          ctx.shadowBlur = 0;
+        }
         ctx.stroke();
+        ctx.shadowBlur = 0;
 
         // Node
         ctx.beginPath();
-        ctx.arc(x, y, isFocused ? 7 : 4, 0, Math.PI * 2);
+        ctx.arc(x, y, isFocused ? 8 : 4, 0, Math.PI * 2);
         ctx.fillStyle = isFocused ? '#60a5fa' : (isActive ? '#3b82f6' : '#262626');
         ctx.fill();
         
-        if (isActive || isFocused) {
-          ctx.shadowBlur = isFocused ? 20 : 10;
-          ctx.shadowColor = isFocused ? '#60a5fa' : '#3b82f6';
+        if (isFocused) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
           ctx.stroke();
-          ctx.shadowBlur = 0;
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = '#60a5fa';
+          ctx.beginPath();
+          ctx.arc(x, y, 12, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else if (isActive) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#3b82f6';
+          ctx.stroke();
         }
+        ctx.shadowBlur = 0;
 
         // Label
         ctx.fillStyle = isFocused ? '#fff' : (isActive ? '#fff' : '#525252');
-        ctx.font = isFocused ? 'bold 12px JetBrains Mono' : '10px JetBrains Mono';
+        ctx.font = isFocused ? 'bold 13px JetBrains Mono' : '10px JetBrains Mono';
         ctx.textAlign = 'center';
-        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 16 : 12));
+        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 18 : 12));
       });
 
       // Core anchor
@@ -138,9 +164,9 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
     render();
     return () => {
       cancelAnimationFrame(animationFrame);
-      canvas.removeEventListener('click', handleCanvasClick);
+      canvas.removeEventListener('mousedown', handleCanvasClick);
     };
-  }, [activeAgents, isProcessing, focusedAgent, onAgentClick]);
+  }, [activeAgents, isProcessing, focusedAgent, onAgentClick, onBackgroundClick]);
 
   return (
     <div className="relative group cursor-crosshair">
@@ -151,7 +177,10 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         className="max-w-full h-auto opacity-80"
       />
       <div className="absolute bottom-4 left-4 mono text-[10px] text-neutral-600 pointer-events-none">
-        INTERACTIVE_TOPOLOGY_V1.0
+        INTERACTIVE_TOPOLOGY_V1.1
+      </div>
+      <div className="absolute top-4 right-4 mono text-[9px] text-neutral-700 bg-black/40 px-2 py-1 rounded border border-neutral-800 pointer-events-none">
+        {focusedAgent ? `FOCUSED: ${focusedAgent.toUpperCase()}` : 'SYSTEM_IDLE'}
       </div>
     </div>
   );

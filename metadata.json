@@ -1,0 +1,8 @@
+{
+  "name": "NEXUS-LCP Orchestrator",
+  "description": "A deterministic multi-agent cognitive system implementing the Logical Continuum Protocol (LCP) for verifiable reasoning and semantic lineage tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

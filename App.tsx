@@ -71,7 +71,7 @@ const App: React.FC = () => {
   }, [readiness, isProcessing, history]);
 
   const handleAgentClick = (role: AgentRole) => {
-    // If clicking an already focused agent, show modal. Otherwise focus.
+    // Distinguish between focusing and opening modal
     if (focusedAgent === role) {
       setSelectedAgentForModal(role);
     } else {
@@ -81,6 +81,11 @@ const App: React.FC = () => {
 
   const handleBackgroundClick = () => {
     setFocusedAgent(null);
+  };
+
+  const openAgentModal = (role: AgentRole) => {
+    setFocusedAgent(role); // Focus the agent as well when selecting for modal view
+    setSelectedAgentForModal(role);
   };
 
   return (
@@ -131,13 +136,14 @@ const App: React.FC = () => {
                 <div className="mt-6 flex items-center justify-center gap-4 animate-in fade-in zoom-in-95">
                   <span className="mono text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1 rounded-full flex items-center gap-2">
                     <Focus size={10} />
-                    FOCUS: {focusedAgent.toUpperCase()}
+                    FOCUS_ACTIVE: {focusedAgent.toUpperCase()}
                   </span>
                   <button 
                     onClick={() => setFocusedAgent(null)}
-                    className="text-neutral-600 hover:text-red-400 transition-colors"
+                    className="text-neutral-600 hover:text-red-400 transition-colors flex items-center gap-1 group"
                   >
-                    <XCircle size={14} />
+                    <XCircle size={14} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] mono">CLEAR</span>
                   </button>
                 </div>
               )}
@@ -196,7 +202,7 @@ const App: React.FC = () => {
                   key={state.id} 
                   state={state} 
                   focusedAgent={focusedAgent} 
-                  onAgentNameClick={(role) => setSelectedAgentForModal(role)}
+                  onAgentNameClick={openAgentModal}
                 />
               ))}
             </div>

@@ -46,7 +46,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const y = centerY + Math.sin(angle) * radius;
         
         const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
-        if (dist < 25) {
+        if (dist < 30) { // Increased hit area for better UX
           onAgentClick(role);
           clickedAgent = true;
         }
@@ -89,7 +89,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
       const radius = 120;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
-      // Draw active agents constellation
+      // Draw agent lines and nodes
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -97,38 +97,38 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
 
-        // Connection line
+        // Connection line highlighting
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
         if (isFocused) {
           ctx.strokeStyle = '#3b82f6';
-          ctx.lineWidth = 3;
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
+          ctx.lineWidth = 4;
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = 'rgba(59, 130, 246, 0.6)';
         } else {
-          ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.3)' : 'rgba(30, 30, 30, 0.4)';
+          ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(30, 30, 30, 0.5)';
           ctx.lineWidth = 1;
           ctx.shadowBlur = 0;
         }
         ctx.stroke();
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0; // Reset shadow
 
-        // Node
+        // Node with focus-specific visual cues
         ctx.beginPath();
-        ctx.arc(x, y, isFocused ? 8 : 4, 0, Math.PI * 2);
+        ctx.arc(x, y, isFocused ? 10 : 4, 0, Math.PI * 2);
         ctx.fillStyle = isFocused ? '#60a5fa' : (isActive ? '#3b82f6' : '#262626');
         ctx.fill();
         
         if (isFocused) {
-          ctx.strokeStyle = '#fff';
+          ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 2;
           ctx.stroke();
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = '#60a5fa';
+          
+          // Outer focus ring
           ctx.beginPath();
-          ctx.arc(x, y, 12, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+          ctx.arc(x, y, 16, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.2)';
           ctx.lineWidth = 1;
           ctx.stroke();
         } else if (isActive) {
@@ -138,23 +138,23 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         }
         ctx.shadowBlur = 0;
 
-        // Label
-        ctx.fillStyle = isFocused ? '#fff' : (isActive ? '#fff' : '#525252');
+        // Label handling
+        ctx.fillStyle = isFocused ? '#ffffff' : (isActive ? '#ffffff' : '#525252');
         ctx.font = isFocused ? 'bold 13px JetBrains Mono' : '10px JetBrains Mono';
         ctx.textAlign = 'center';
-        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 18 : 12));
+        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 22 : 12));
       });
 
-      // Core anchor
+      // Central core rendering
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
       ctx.fillStyle = isProcessing ? '#3b82f6' : '#404040';
       ctx.fill();
       if (isProcessing) {
         ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 12 + Math.sin(Date.now() / 200) * 4, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, 14 + Math.sin(Date.now() / 200) * 4, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -174,13 +174,13 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         ref={canvasRef} 
         width={600} 
         height={400} 
-        className="max-w-full h-auto opacity-80"
+        className="max-w-full h-auto opacity-90 transition-opacity hover:opacity-100"
       />
-      <div className="absolute bottom-4 left-4 mono text-[10px] text-neutral-600 pointer-events-none">
-        INTERACTIVE_TOPOLOGY_V1.1
+      <div className="absolute bottom-4 left-4 mono text-[10px] text-neutral-600 pointer-events-none select-none">
+        LCP_TOPOLOGY_V1.2
       </div>
-      <div className="absolute top-4 right-4 mono text-[9px] text-neutral-700 bg-black/40 px-2 py-1 rounded border border-neutral-800 pointer-events-none">
-        {focusedAgent ? `FOCUSED: ${focusedAgent.toUpperCase()}` : 'SYSTEM_IDLE'}
+      <div className="absolute top-4 right-4 mono text-[9px] text-neutral-400 bg-neutral-900/80 px-2 py-1 rounded border border-neutral-800 pointer-events-none select-none">
+        {focusedAgent ? `FOCUSED_AGENT: ${focusedAgent.toUpperCase()}` : 'TOPOLOGY_IDLE'}
       </div>
     </div>
   );

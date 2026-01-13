@@ -100,10 +100,13 @@ export const SemanticOutput: React.FC<Props> = ({ state, focusedAgent, onAgentNa
               {filteredRoles.filter(r => r !== AgentRole.WORK).map(role => (
                 <div key={role} className={`bg-black/60 rounded-xl p-5 border-2 transition-all group relative overflow-hidden ${focusedAgent === role ? 'border-blue-500 bg-blue-500/5 shadow-[0_0_20px_rgba(59,130,246,0.1)]' : 'border-neutral-900 hover:border-neutral-700'}`}>
                   <div className="flex justify-between items-center mb-4 relative z-10">
-                    <div className="flex items-center gap-3">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onAgentNameClick(role); }}
+                      className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                    >
                       <div className={`w-2 h-2 rounded-full ${focusedAgent === role ? 'bg-blue-400' : 'bg-neutral-800'}`} />
                       <span className="mono text-[11px] font-black text-neutral-200 uppercase tracking-widest">{role}</span>
-                    </div>
+                    </button>
                     <div className="flex gap-1">
                       <button 
                         onClick={(e) => { e.stopPropagation(); onAgentNameClick(role); }}

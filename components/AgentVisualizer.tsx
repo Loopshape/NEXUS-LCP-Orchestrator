@@ -46,7 +46,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const y = centerY + Math.sin(angle) * radius;
         
         const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
-        if (dist < 35) { // Increased hit area for better touch/click experience
+        if (dist < 40) { // Large hit area for nodes
           onAgentClick(role);
           clickedAgent = true;
         }
@@ -62,8 +62,8 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Draw background network
-      ctx.strokeStyle = '#1a1a1a';
+      // Draw ambient background network
+      ctx.strokeStyle = '#151515';
       ctx.lineWidth = 1;
       dots.forEach((dot, i) => {
         dot.x += dot.vx;
@@ -89,7 +89,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
       const radius = 120;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
-      // Draw agent connections first (bottom layer)
+      // Draw Connection Lines
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -102,11 +102,11 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         ctx.lineTo(x, y);
         if (isFocused) {
           ctx.strokeStyle = '#3b82f6';
-          ctx.lineWidth = 5;
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = 'rgba(59, 130, 246, 0.8)';
+          ctx.lineWidth = 6;
+          ctx.shadowBlur = 25;
+          ctx.shadowColor = 'rgba(59, 130, 246, 1)';
         } else {
-          ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(30, 30, 30, 0.4)';
+          ctx.strokeStyle = isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(40, 40, 40, 0.5)';
           ctx.lineWidth = isActive ? 2 : 1;
           ctx.shadowBlur = 0;
         }
@@ -114,7 +114,7 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         ctx.shadowBlur = 0;
       });
 
-      // Draw agent nodes
+      // Draw Nodes
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -122,48 +122,53 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
 
-        // Node
+        // Visual distinction for Focused Node
         ctx.beginPath();
-        ctx.arc(x, y, isFocused ? 14 : (isActive ? 6 : 4), 0, Math.PI * 2);
-        ctx.fillStyle = isFocused ? '#60a5fa' : (isActive ? '#3b82f6' : '#262626');
+        ctx.arc(x, y, isFocused ? 18 : (isActive ? 8 : 6), 0, Math.PI * 2);
+        ctx.fillStyle = isFocused ? '#60a5fa' : (isActive ? '#3b82f6' : '#1a1a1a');
         ctx.fill();
         
         if (isFocused) {
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 4;
           ctx.stroke();
           
-          ctx.shadowBlur = 30;
+          // Outer Glow Pulse for Focused
+          ctx.shadowBlur = 40;
           ctx.shadowColor = '#60a5fa';
           ctx.beginPath();
-          ctx.arc(x, y, 20, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
-          ctx.lineWidth = 1;
+          ctx.arc(x, y, 24 + Math.sin(Date.now() / 300) * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.4)';
+          ctx.lineWidth = 2;
           ctx.stroke();
           ctx.shadowBlur = 0;
         } else if (isActive) {
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = '#333';
           ctx.lineWidth = 1;
           ctx.stroke();
         }
 
-        // Label
-        ctx.fillStyle = isFocused ? '#ffffff' : (isActive ? '#ffffff' : '#525252');
-        ctx.font = isFocused ? 'bold 14px JetBrains Mono' : '10px JetBrains Mono';
+        // Label handling
+        ctx.fillStyle = isFocused ? '#ffffff' : (isActive ? '#ffffff' : '#666');
+        ctx.font = isFocused ? 'bold 15px JetBrains Mono' : '10px JetBrains Mono';
         ctx.textAlign = 'center';
-        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 26 : 14));
+        ctx.fillText(role.toUpperCase(), x, y - (isFocused ? 32 : 16));
       });
 
       // Central core
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
-      ctx.fillStyle = isProcessing ? '#3b82f6' : '#404040';
+      ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+      ctx.fillStyle = isProcessing ? '#3b82f6' : '#333';
       ctx.fill();
       if (isProcessing) {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 16 + Math.sin(Date.now() / 200) * 5, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, 18 + Math.sin(Date.now() / 150) * 6, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -178,23 +183,26 @@ export const AgentVisualizer: React.FC<Props> = ({ history, isProcessing, active
   }, [activeAgents, isProcessing, focusedAgent, onAgentClick, onBackgroundClick]);
 
   return (
-    <div className="relative group cursor-crosshair">
+    <div className="relative group cursor-crosshair select-none">
       <canvas 
         ref={canvasRef} 
         width={600} 
         height={400} 
-        className="max-w-full h-auto opacity-95 transition-all"
+        className="max-w-full h-auto opacity-100 transition-all filter drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
       />
-      <div className="absolute bottom-4 left-4 mono text-[10px] text-neutral-600 pointer-events-none select-none">
-        NEXUS_VISUALIZER_V1.3
+      <div className="absolute bottom-6 left-6 mono text-[10px] text-neutral-700 tracking-[0.2em] font-bold">
+        LCP_RUNTIME_TOPOLOGY_v1.4
       </div>
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none">
-        <div className={`px-4 py-1.5 rounded-full border transition-all duration-300 flex items-center gap-2 ${focusedAgent ? 'bg-blue-500/10 border-blue-500/40 text-blue-400' : 'bg-black/40 border-neutral-800 text-neutral-600'}`}>
-          <div className={`w-1.5 h-1.5 rounded-full ${focusedAgent ? 'bg-blue-400 animate-pulse' : 'bg-neutral-800'}`} />
-          <span className="mono text-[10px] font-bold tracking-widest uppercase">
-            {focusedAgent ? `ACTIVE_FOCUS: ${focusedAgent}` : 'CONTINUUM_SCAN_READY'}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2">
+        <div className={`px-6 py-2 rounded-full border-2 backdrop-blur-md transition-all duration-500 flex items-center gap-3 ${focusedAgent ? 'bg-blue-600/10 border-blue-500 text-blue-400 scale-110 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'bg-black/40 border-neutral-800 text-neutral-600'}`}>
+          <div className={`w-2 h-2 rounded-full ${focusedAgent ? 'bg-blue-400 animate-pulse' : 'bg-neutral-800'}`} />
+          <span className="mono text-xs font-black tracking-widest uppercase">
+            {focusedAgent ? `FOCUSED_ENTITY: ${focusedAgent}` : 'CONTINUUM_SCAN: READY'}
           </span>
         </div>
+      </div>
+      <div className="absolute bottom-6 right-6 mono text-[9px] text-neutral-700 max-w-[120px] text-right">
+        CLICK_NODE: TOGGLE_FOCUS<br/>CLICK_BG: RESET
       </div>
     </div>
   );

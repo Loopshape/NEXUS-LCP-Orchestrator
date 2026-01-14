@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SemanticState, AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
-import { Lock, Unlock, Zap, Target } from 'lucide-react';
+import { Lock, Unlock, Zap, Target, X } from 'lucide-react';
 
 interface Props {
   isProcessing: boolean;
@@ -93,7 +93,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         if (isFocused) {
           ctx.strokeStyle = isFocusLocked ? '#ffff33' : '#33ffff';
           ctx.lineWidth = 2.5;
-          ctx.shadowBlur = 15;
+          ctx.shadowBlur = isFocusLocked ? 20 : (15 + Math.sin(time / 200) * 5);
           ctx.shadowColor = ctx.strokeStyle;
           ctx.setLineDash([5, 5]);
           ctx.lineDashOffset = -time / 50;
@@ -105,6 +105,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         }
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.shadowBlur = 0; // Reset for others
       });
 
       // Nodes
@@ -118,9 +119,9 @@ export const AgentVisualizer: React.FC<Props> = ({
 
         // Halo
         if (isFocused) {
-            const haloSize = 25 + Math.sin(time / 200) * 5;
+            const haloSize = isFocusLocked ? 30 : (25 + Math.sin(time / 200) * 5);
             const gradient = ctx.createRadialGradient(x, y, 5, x, y, haloSize);
-            gradient.addColorStop(0, isFocusLocked ? 'rgba(255, 255, 51, 0.2)' : 'rgba(51, 255, 255, 0.2)');
+            gradient.addColorStop(0, isFocusLocked ? 'rgba(255, 255, 51, 0.3)' : 'rgba(51, 255, 255, 0.2)');
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = gradient;
             ctx.beginPath();
@@ -132,7 +133,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 11 : 7, 0, Math.PI * 2);
         ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffff33' : '#33ffff') : (isActive ? '#33ff33' : '#1a0510');
-        ctx.shadowBlur = (isFocused || isActive) ? 10 : 0;
+        ctx.shadowBlur = isFocused ? (isFocusLocked ? 20 : 15) : (isActive ? 10 : 0);
         ctx.shadowColor = ctx.fillStyle as string;
         ctx.fill();
         ctx.strokeStyle = (isFocused || isActive) ? '#ffffff' : '#440000';
@@ -177,16 +178,41 @@ export const AgentVisualizer: React.FC<Props> = ({
     <div className="h-full flex flex-col items-center justify-center relative p-2 overflow-hidden">
       {/* Topology Header Indicator */}
       <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none">
-        <div className={`flex items-center gap-3 px-4 py-1.5 rounded-full border bg-black/60 backdrop-blur-md transition-all duration-500 ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 scale-105' : 'border-blue-500 scale-100') : 'border-red-900/50 opacity-40'}`}>
-          <Target size={12} className={isFocusLocked ? 'neon-yellow animate-spin-slow' : 'neon-blue'} />
+        <div className={`flex items-center gap-3 px-4 py-1.5 rounded-full border bg-black/60 backdrop-blur-md transition-all duration-500 ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 scale-105 shadow-[0_0_15px_rgba(255,255,51,0.3)]' : 'border-blue-500 scale-100') : 'border-red-900/50 opacity-40'}`}>
+          <Target size={12} className={isFocusLocked ? 'neon-yellow' : 'neon-blue'} />
           <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isFocusLocked ? 'neon-yellow' : (focusedAgent ? 'neon-blue' : 'text-neutral-500')}`}>
-            {focusedAgent ? (isFocusLocked ? `LOCKED: ${focusedAgent}` : `PROBE: ${focusedAgent}`) : 'SYSTEM_NOMINAL'}
+            {focusedAgent ? (isFocusLocked ? `FOCUS LOCKED: ${focusedAgent}` : `PROBE: ${focusedAgent}`) : 'SYSTEM_NOMINAL'}
           </span>
           {isFocusLocked && <Lock size={10} className="neon-yellow" />}
         </div>
       </div>
 
       <canvas ref={canvasRef} width={300} height={300} className="w-full max-w-[300px]" />
+
+      {/* Focus Help Hint */}
+      {focusedAgent && (
+        <div className="absolute top-1/2 left-4 -translate-y-1/2 flex flex-col items-start gap-1 pointer-events-none max-w-[120px]">
+           <span className="text-[7px] font-black uppercase text-neutral-500 tracking-[0.3em] leading-tight">
+              Click background or button to reset focus.
+           </span>
+           {!isFocusLocked && (
+             <span className="text-[7px] font-black uppercase text-blue-500/60 tracking-[0.3em] leading-tight mt-1">
+                Click node again to lock isolation.
+             </span>
+           )}
+        </div>
+      )}
+
+      {/* Clear Focus Button */}
+      {focusedAgent && (
+        <button 
+          onClick={(e) => { e.stopPropagation(); onBackgroundClick(); }}
+          className="absolute bottom-12 right-6 flex items-center gap-2 bg-red-900/40 hover:bg-red-600 border border-red-500 text-white text-[9px] font-black uppercase px-4 py-2 rounded-sm transition-all shadow-lg active:scale-95 group"
+        >
+          <X size={10} className="group-hover:rotate-90 transition-transform" />
+          Clear Focus
+        </button>
+      )}
 
       <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center text-[8px] font-black uppercase tracking-[0.4em] text-neutral-600">
          <span>Topological_Sync</span>

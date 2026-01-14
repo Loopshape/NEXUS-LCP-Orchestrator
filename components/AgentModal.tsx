@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AgentRole } from '../types';
 import { AGENT_ENsemble, AGENT_SYSTEM_PROMPTS, AGGREGATION_ORDER } from '../constants';
-import { X, Shield, Activity, Cpu, Terminal, BookOpen, CheckCircle2, Zap, Share2, Target } from 'lucide-react';
+import { X, Shield, Activity, Cpu, Terminal, CheckCircle2, Zap, Share2, Copy, Check } from 'lucide-react';
 
 interface Props {
   role: AgentRole;
@@ -22,6 +22,7 @@ const EPISTEMIC_EXAMPLES: Record<AgentRole, string[]> = {
 };
 
 export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
+  const [copied, setCopied] = useState(false);
   const agent = AGENT_ENsemble.find(a => a.role === role);
   const examples = EPISTEMIC_EXAMPLES[role] || [];
   const index = AGGREGATION_ORDER.indexOf(role);
@@ -30,11 +31,20 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
 
   if (!agent) return null;
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(AGENT_SYSTEM_PROMPTS[role]);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" onClick={onClose}>
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-pointer" 
+      onClick={onClose}
+    >
       <div 
         onClick={(e) => e.stopPropagation()} 
-        className={`w-full max-w-xl bg-[#0a0515] border-4 rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[95vh] ${isFocused ? 'border-blue-500 shadow-blue-500/30' : 'border-[#880000]'}`}
+        className={`w-full max-w-xl bg-[#0a0515] border-4 rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[95vh] cursor-default ${isFocused ? 'border-blue-500 shadow-blue-500/30' : 'border-[#880000]'}`}
       >
         <div className={`px-4 py-2 flex items-center justify-between border-b-2 ${isFocused ? 'bg-gradient-to-r from-blue-900 to-blue-700 border-blue-400' : 'bg-gradient-to-r from-[#aa0000] to-[#440000] border-red-500'}`}>
           <div className="flex items-center gap-3">
@@ -87,7 +97,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
               <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-[0.4em]"><Activity size={14} /> Continuum Context</div>
               <div className="bg-black/40 p-5 border-2 border-green-900/40 rounded-sm h-full shadow-inner">
                 <p className="text-[11px] text-neutral-300 leading-relaxed font-medium">
-                  Protocol node ${agent.role} enforces sovereign logical integrity within the {agent.role.toLowerCase()} domain.
+                  Protocol node {agent.role} enforces sovereign logical integrity within the {agent.role.toLowerCase()} domain.
                 </p>
                 <div className="mt-4 p-2 bg-green-900/20 border border-green-500/20 text-[9px] text-green-400 mono">
                    ROLE_ID: AG_PROT_{role.toUpperCase()}<br/>
@@ -99,7 +109,18 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
 
           {/* System Prompt Logic */}
           <section className="space-y-4">
-            <div className="flex items-center gap-2 text-[10px] font-black neon-yellow uppercase tracking-[0.4em]"><Terminal size={14} /> Kernel Kernel Instruction</div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-yellow uppercase tracking-[0.4em]">
+                <Terminal size={14} /> Kernel Kernel Instruction
+              </div>
+              <button 
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 text-[9px] font-black uppercase text-neutral-400 hover:text-white transition-colors"
+              >
+                {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                {copied ? 'Copied' : 'Copy Prompt'}
+              </button>
+            </div>
             <div className="bg-black/80 p-5 border-2 border-yellow-900/30 rounded-sm font-mono text-[11px] text-blue-200 leading-relaxed shadow-lg relative overflow-hidden">
                <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-30" />
                {AGENT_SYSTEM_PROMPTS[role]}

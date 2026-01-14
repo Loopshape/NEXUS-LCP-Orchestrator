@@ -140,9 +140,9 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isFlashing = flashNode === role;
 
         // Visual Status Glows:
+        // - Focus Locked: static yellow glow
+        // - Focused but not locked: bright cyan pulse glow
         // - Active but not focused: subtle green glow
-        // - Focused but not locked: bright cyan glow
-        // - Focus locked: static yellow glow
         if (isFocused) {
           const haloSize = isFocusLocked ? 30 : (25 + Math.sin(time / 200) * 5);
           const gradient = ctx.createRadialGradient(x, y, 5, x, y, haloSize);
@@ -221,20 +221,20 @@ export const AgentVisualizer: React.FC<Props> = ({
     <div className="h-full flex flex-col items-center justify-center relative p-2 overflow-hidden">
       {/* Topology Header Indicator */}
       <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none">
-        <div className={`flex items-center gap-3 px-4 py-1.5 rounded-full border bg-black/60 backdrop-blur-md transition-all duration-500 ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 scale-105 shadow-[0_0_15px_rgba(255,255,51,0.4)]' : 'border-blue-500 scale-100 shadow-[0_0_15px_rgba(51,255,255,0.2)]') : 'border-red-900/50 opacity-40'}`}>
+        <div className={`flex items-center gap-3 px-4 py-1.5 rounded-full border bg-black/60 backdrop-blur-md transition-all duration-500 ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 scale-105 shadow-[0_0_20px_rgba(255,255,51,0.4)]' : 'border-blue-500 scale-100 shadow-[0_0_15px_rgba(51,255,255,0.2)]') : 'border-red-900/50 opacity-40'}`}>
           <Target size={12} className={isFocusLocked ? 'neon-yellow' : 'neon-blue'} />
-          <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isFocusLocked ? 'neon-yellow' : (focusedAgent ? 'neon-blue' : 'text-neutral-500')}`}>
+          <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isFocusLocked ? 'neon-yellow font-black' : (focusedAgent ? 'neon-blue' : 'text-neutral-500')}`}>
             {focusedAgent ? (isFocusLocked ? `FOCUS LOCKED: ${focusedAgent}` : `PROBE: ${focusedAgent}`) : 'SYSTEM_NOMINAL'}
           </span>
-          {isFocusLocked && <Lock size={10} className="neon-yellow" />}
+          {isFocusLocked && <Lock size={10} className="neon-yellow animate-pulse" />}
         </div>
       </div>
 
       <canvas ref={canvasRef} width={300} height={300} className="w-full max-w-[300px]" />
 
-      {/* Guidance Tooltip near focused node */}
+      {/* Guidance Tooltip */}
       {focusedAgent && (
-        <div className="absolute top-[22%] right-6 flex flex-col items-end gap-1.5 pointer-events-none max-w-[150px] text-right bg-black/60 p-2 border border-white/5 backdrop-blur-sm rounded-sm">
+        <div className="absolute top-[22%] right-6 flex flex-col items-end gap-1.5 pointer-events-none max-w-[160px] text-right bg-black/70 p-2 border border-white/10 backdrop-blur-md rounded-sm">
            <span className="text-[7px] font-black uppercase text-neutral-400 tracking-[0.2em] leading-tight flex items-center gap-1">
               <Info size={8} /> Click background or Clear to reset
            </span>
@@ -245,17 +245,17 @@ export const AgentVisualizer: React.FC<Props> = ({
            )}
            {isFocusLocked && (
              <span className="text-[7px] font-black uppercase text-yellow-500 tracking-[0.2em] leading-tight mt-1">
-                Node Isolation Locked.
+                Isolation locked. Verified target.
              </span>
            )}
         </div>
       )}
 
-      {/* Clear Focus Button - Prominent UI Action */}
+      {/* Clear Focus Button */}
       {focusedAgent && (
         <button 
           onClick={(e) => { e.stopPropagation(); onBackgroundClick(); }}
-          className="absolute bottom-12 right-6 flex items-center gap-2 bg-[#440000]/90 hover:bg-red-700 border border-red-500 text-white text-[10px] font-black uppercase px-6 py-2.5 rounded-sm transition-all shadow-[0_0_20px_rgba(255,0,0,0.4)] active:scale-95 group z-10"
+          className="absolute bottom-12 right-6 flex items-center gap-2 bg-[#440000]/90 hover:bg-red-700 border border-red-500 text-white text-[10px] font-black uppercase px-6 py-2.5 rounded-sm transition-all shadow-[0_0_20px_rgba(255,0,0,0.5)] active:scale-95 group z-10"
         >
           <X size={12} className="group-hover:rotate-90 transition-transform" />
           Clear Focus

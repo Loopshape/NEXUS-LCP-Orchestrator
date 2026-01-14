@@ -44,7 +44,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
     >
       <div 
         onClick={(e) => e.stopPropagation()} 
-        className={`w-full max-w-xl bg-[#0a0515] border-4 rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[95vh] cursor-default ${isFocused ? 'border-blue-500 shadow-blue-500/30' : 'border-[#880000]'}`}
+        className={`w-full max-w-xl bg-[#0a0515] border-4 rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[95vh] cursor-default transition-all duration-300 ${isFocused ? 'border-blue-500 shadow-blue-500/30' : 'border-[#880000]'}`}
       >
         <div className={`px-4 py-2 flex items-center justify-between border-b-2 ${isFocused ? 'bg-gradient-to-r from-blue-900 to-blue-700 border-blue-400' : 'bg-gradient-to-r from-[#aa0000] to-[#440000] border-red-500'}`}>
           <div className="flex items-center gap-3">
@@ -56,31 +56,31 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
         </div>
 
         <div className="flex-grow overflow-y-auto p-6 space-y-8">
-          {/* Cognitive Pathways - Visually representing flow with Bolt and Network icons */}
+          {/* Cognitive Pathways - Visual representation of data flow */}
           <section className="space-y-4">
              <div className="flex items-center gap-2 text-[10px] font-black neon-blue uppercase tracking-[0.5em]">
                 <Share2 size={14} /> Cognitive Pathways
              </div>
-             <div className="grid grid-cols-3 items-center bg-black/60 p-5 border-2 border-white/5 rounded-sm relative shadow-inner">
+             <div className="grid grid-cols-3 items-center bg-black/60 p-6 border-2 border-white/5 rounded-sm relative shadow-inner">
                 <div 
                   className="flex flex-col items-center gap-2 group cursor-help" 
                   title={`Logical input vector received from upstream ensemble node: ${prevAgent}`}
                 >
-                    <Zap size={22} className="neon-yellow" />
+                    <Zap size={24} className="neon-yellow" />
                     <span className="text-[9px] font-black neon-white uppercase">{prevAgent}</span>
-                    <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Protocol_Input</span>
+                    <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Signal_Source</span>
                 </div>
                 <div className="flex flex-col items-center justify-center px-4">
                     <div className="h-[2px] w-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 animate-pulse" />
-                    <span className="text-[6px] font-black text-neutral-700 uppercase mt-1">Processing_Domain</span>
+                    <span className="text-[6px] font-black text-neutral-800 uppercase mt-2">Enforcement_Domain</span>
                 </div>
                 <div 
                   className="flex flex-col items-center gap-2 group cursor-help" 
                   title={`Semantic emission transmitted to downstream ensemble node: ${nextAgent}`}
                 >
-                    <Network size={22} className="neon-green" />
+                    <Network size={24} className="neon-green" />
                     <span className="text-[9px] font-black neon-white uppercase">{nextAgent}</span>
-                    <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Logic_Emission</span>
+                    <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Emission_Target</span>
                 </div>
              </div>
           </section>
@@ -104,7 +104,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
               <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-[0.4em]"><Activity size={14} /> Continuum Context</div>
               <div className="bg-black/40 p-5 border-2 border-green-900/40 rounded-sm h-full shadow-inner">
                 <p className="text-[11px] text-neutral-300 leading-relaxed font-medium">
-                  Protocol node {agent.role} enforces sovereign logical integrity within the {agent.role.toLowerCase()} domain. Ensuring zero-drift alignment.
+                  Protocol node {agent.role} enforces sovereign logical integrity within the {agent.role.toLowerCase()} domain. Ensures zero-drift alignment.
                 </p>
                 <div className="mt-4 p-2 bg-green-900/20 border border-green-500/20 text-[9px] text-green-400 mono">
                    ROLE_ID: AG_PROT_{role.toUpperCase()}<br/>
@@ -122,14 +122,14 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
               </div>
               <button 
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 text-[9px] font-black uppercase text-neutral-400 hover:text-white transition-all bg-white/5 px-2 py-1 rounded border border-white/10"
+                className="flex items-center gap-1.5 text-[9px] font-black uppercase text-neutral-400 hover:text-white transition-all bg-white/5 px-3 py-1.5 rounded border border-white/10 hover:border-white/30"
               >
                 {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                 {copied ? 'Copied' : 'Copy Prompt'}
               </button>
             </div>
             <div className="bg-black/80 p-5 border-2 border-yellow-900/30 rounded-sm font-mono text-[11px] text-blue-200 leading-relaxed shadow-lg relative overflow-hidden group">
-               <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-30 group-hover:opacity-100 transition-opacity" />
+               <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-30 group-hover:opacity-100 transition-opacity duration-500" />
                {AGENT_SYSTEM_PROMPTS[role]}
             </div>
           </section>
@@ -139,7 +139,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
             <span className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.2em]">Hash_Signature: 0x{role.toUpperCase()}</span>
             <div className="flex items-center gap-2">
                <span className="text-[9px] neon-green font-black">ENFORCEMENT_NOMINAL</span>
-               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.7)]" />
             </div>
         </div>
       </div>

@@ -72,7 +72,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
                 </div>
                 <div className="flex flex-col items-center justify-center px-4">
                     <div className="h-[2px] w-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 animate-pulse" />
-                    <span className="text-[6px] font-black text-neutral-800 uppercase mt-2">Enforcement_Domain</span>
+                    <span className="text-[6px] font-black text-neutral-700 uppercase mt-2">Enforcement_Domain</span>
                 </div>
                 <div 
                   className="flex flex-col items-center gap-2 group cursor-help" 

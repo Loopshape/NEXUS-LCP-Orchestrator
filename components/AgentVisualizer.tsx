@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
-import { Lock, Target, X, Info } from 'lucide-react';
+import { Lock, Target, X, Info, Zap, Network } from 'lucide-react';
 
 interface Props {
   isProcessing: boolean;
@@ -20,11 +20,18 @@ export const AgentVisualizer: React.FC<Props> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [flashNode, setFlashNode] = useState<AgentRole | null>(null);
   const [previousFocused, setPreviousFocused] = useState<AgentRole | null>(null);
+  const [fadeAlpha, setFadeAlpha] = useState(0); // For the fade-out effect
 
   useEffect(() => {
-    if (focusedAgent && focusedAgent !== previousFocused) {
-      setFlashNode(focusedAgent);
-      setTimeout(() => setFlashNode(null), 400);
+    if (focusedAgent) {
+      if (focusedAgent !== previousFocused) {
+        setFlashNode(focusedAgent);
+        setTimeout(() => setFlashNode(null), 400);
+      }
+      setFadeAlpha(1); // Reset fade alpha to full when focused
+    } else if (previousFocused) {
+      // Just lost focus, trigger fade out over time
+      // This is handled in the render loop by decaying the value
     }
     setPreviousFocused(focusedAgent);
   }, [focusedAgent]);
@@ -91,6 +98,11 @@ export const AgentVisualizer: React.FC<Props> = ({
       const radius = 90;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
+      // Handle fade decay
+      if (!focusedAgent && fadeAlpha > 0) {
+        setFadeAlpha(prev => Math.max(0, prev - 0.05));
+      }
+
       // Draw Topology Grid
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 0.5;
@@ -112,10 +124,12 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
-        if (isFocused) {
-          ctx.strokeStyle = isFocusLocked ? '#ffff33' : '#33ffff';
-          ctx.lineWidth = 2.5;
-          ctx.shadowBlur = isFocusLocked ? 20 : (15 + Math.sin(time / 200) * 5);
+        
+        if (isFocused || (!focusedAgent && fadeAlpha > 0 && role === previousFocused)) {
+          const currentAlpha = isFocused ? 1 : fadeAlpha;
+          ctx.strokeStyle = isFocusLocked ? `rgba(255, 255, 51, ${currentAlpha})` : `rgba(51, 255, 255, ${currentAlpha})`;
+          ctx.lineWidth = 2.5 * currentAlpha;
+          ctx.shadowBlur = (isFocusLocked ? 20 : (15 + Math.sin(time / 200) * 5)) * currentAlpha;
           ctx.shadowColor = ctx.strokeStyle;
           ctx.setLineDash([5, 5]);
           ctx.lineDashOffset = -time / 50;
@@ -138,15 +152,14 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
         const isFlashing = flashNode === role;
+        const isFadingNode = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
-        // Visual Status Glows:
-        // - Focus Locked: static yellow glow
-        // - Focused but not locked: bright cyan pulse glow
-        // - Active but not focused: subtle green glow
-        if (isFocused) {
-          const haloSize = isFocusLocked ? 30 : (25 + Math.sin(time / 200) * 5);
+        // Visual Status Glows
+        if (isFocused || isFadingNode) {
+          const currentAlpha = isFocused ? 1 : fadeAlpha;
+          const haloSize = (isFocusLocked ? 30 : (25 + Math.sin(time / 200) * 5)) * currentAlpha;
           const gradient = ctx.createRadialGradient(x, y, 5, x, y, haloSize);
-          gradient.addColorStop(0, isFocusLocked ? 'rgba(255, 255, 51, 0.35)' : 'rgba(51, 255, 255, 0.25)');
+          gradient.addColorStop(0, isFocusLocked ? `rgba(255, 255, 51, ${0.35 * currentAlpha})` : `rgba(51, 255, 255, ${0.25 * currentAlpha})`);
           gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = gradient;
           ctx.beginPath();
@@ -167,8 +180,9 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 11 : 7, 0, Math.PI * 2);
         
-        if (isFocused) {
-          ctx.fillStyle = isFocusLocked ? '#ffff33' : '#33ffff';
+        if (isFocused || isFadingNode) {
+          const currentAlpha = isFocused ? 1 : fadeAlpha;
+          ctx.fillStyle = isFocusLocked ? `rgba(255, 255, 51, ${currentAlpha})` : `rgba(51, 255, 255, ${currentAlpha})`;
         } else if (isActive) {
           ctx.fillStyle = '#33ff33';
         } else {
@@ -178,21 +192,23 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.shadowBlur = isFocused ? (isFocusLocked ? 25 : 15) : (isActive ? 10 : 0);
         ctx.shadowColor = ctx.fillStyle as string;
         ctx.fill();
-        ctx.strokeStyle = (isFocused || isActive) ? '#ffffff' : '#440000';
+        ctx.strokeStyle = (isFocused || isActive || isFadingNode) ? '#ffffff' : '#440000';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
+        // Brief Flash cue
         if (isFlashing) {
           ctx.beginPath();
-          ctx.arc(x, y, 32, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-          ctx.lineWidth = 5;
+          ctx.arc(x, y, 35, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+          ctx.lineWidth = 8;
           ctx.stroke();
         }
 
         // Title Label
         ctx.shadowBlur = 0;
         ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffff33' : '#33ffff') : (isActive ? '#33ff33' : '#888');
+        if (isFadingNode) ctx.fillStyle = `rgba(51, 255, 255, ${fadeAlpha})`;
         ctx.font = '800 10px JetBrains Mono';
         ctx.textAlign = 'center';
         ctx.fillText(role.toUpperCase(), x, y - 22);
@@ -215,7 +231,7 @@ export const AgentVisualizer: React.FC<Props> = ({
       canvas.removeEventListener('click', handleInteraction);
       canvas.removeEventListener('dblclick', handleDblClickInteraction);
     };
-  }, [activeAgents, isProcessing, focusedAgent, isFocusLocked, flashNode]);
+  }, [activeAgents, isProcessing, focusedAgent, isFocusLocked, flashNode, fadeAlpha]);
 
   return (
     <div className="h-full flex flex-col items-center justify-center relative p-2 overflow-hidden">

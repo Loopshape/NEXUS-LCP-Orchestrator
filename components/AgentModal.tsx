@@ -142,9 +142,9 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
               </div>
               <button 
                 onClick={handleCopy}
-                className="flex items-center gap-2 text-[10px] font-black uppercase text-neutral-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-sm border border-white/10 hover:border-white/30 active:scale-95 shadow-lg group/copybtn"
+                className="flex items-center gap-2 text-[10px] font-black uppercase text-neutral-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-sm border border-white/10 hover:border-white/30 active:scale-95 shadow-lg group/copy"
               >
-                {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} className="group-hover/copybtn:neon-white" />}
+                {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} className="group-hover/copy:neon-white" />}
                 {copied ? 'Captured' : 'Copy System Prompt'}
               </button>
             </div>

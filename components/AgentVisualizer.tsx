@@ -63,8 +63,8 @@ export const AgentVisualizer: React.FC<Props> = ({
           hit = true;
         }
       });
-      // Rule: If focus is locked, background click does nothing to protect the focus.
-      if (!hit && !isFocusLocked) onBackgroundClick();
+      // Background click resets focus, but ignored if processing or if we hit a node
+      if (!hit && !isProcessing && !isFocusLocked) onBackgroundClick();
     };
 
     const handleDblClickInteraction = (e: MouseEvent) => {
@@ -102,7 +102,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         setFadeAlpha(prev => Math.max(0, prev - 0.05));
       }
 
-      // Topology Grid
+      // Draw Topology Grid
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < canvas.width; i += 30) {
@@ -112,7 +112,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
       }
 
-      // Logic Connections
+      // Draw Connections
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -129,9 +129,9 @@ export const AgentVisualizer: React.FC<Props> = ({
           const currentAlpha = isFocused ? 1 : fadeAlpha;
           ctx.strokeStyle = isFocusLocked ? `rgba(255, 255, 51, ${currentAlpha})` : `rgba(51, 255, 255, ${currentAlpha})`;
           ctx.lineWidth = (isFocusLocked ? 3 : 2) * currentAlpha;
-          // Fixed glow for locked focus, pulsing for regular focus
-          const blurAmount = isFocusLocked ? 20 : (15 + Math.sin(time / 200) * 5);
-          ctx.shadowBlur = blurAmount * currentAlpha;
+          // Static glow for lock, pulsing for focus
+          const blur = isFocusLocked ? 20 : (15 + Math.sin(time / 200) * 5);
+          ctx.shadowBlur = blur * currentAlpha;
           ctx.shadowColor = isFocusLocked ? 'rgba(255, 255, 51, 0.8)' : 'rgba(51, 255, 255, 0.8)';
           ctx.setLineDash([5, 5]);
           ctx.lineDashOffset = -time / 50;
@@ -146,7 +146,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.shadowBlur = 0;
       });
 
-      // Ensemble Nodes
+      // Draw Ensemble Nodes
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -156,13 +156,9 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isFlashing = flashNode === role;
         const isFadingNode = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
-        // Visual Indicator States:
-        // - Focus Locked: static yellow glow (no pulsing)
-        // - Focused (Unlocked): bright cyan pulsing glow
-        // - Active but not focused: subtle green glow
+        // Glow States: Locked (Yellow), Focused (Cyan pulse), Active (Subtle Green)
         if (isFocused || isFadingNode) {
           const currentAlpha = isFocused ? 1 : fadeAlpha;
-          // Pulse only if NOT locked
           const pulse = isFocusLocked ? 1 : (1 + Math.sin(time / 200) * 0.2);
           const haloSize = (isFocusLocked ? 32 : 28) * currentAlpha * pulse;
           const gradient = ctx.createRadialGradient(x, y, 5, x, y, haloSize);
@@ -196,7 +192,6 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.fillStyle = '#1a0510';
         }
         
-        // Final shadow check for locked focus
         ctx.shadowBlur = isFocused ? (isFocusLocked ? 25 : 15) : (isActive ? 10 : 0);
         ctx.shadowColor = ctx.fillStyle as string;
         ctx.fill();
@@ -221,7 +216,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.fillText(role.toUpperCase(), x, y - 24);
       });
 
-      // Central Hub
+      // Hub
       ctx.beginPath();
       ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
       ctx.fillStyle = isProcessing ? '#ffff33' : (activeAgents.length > 0 ? '#33ff33' : '#ff3333');
@@ -242,7 +237,7 @@ export const AgentVisualizer: React.FC<Props> = ({
 
   return (
     <div className="h-full flex flex-col items-center justify-center relative p-2 overflow-hidden bg-black/20">
-      {/* Topology Header Indicator */}
+      {/* Topology Status Header */}
       <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none z-10">
         <div className={`flex items-center gap-3 px-5 py-2 rounded-full border bg-black/80 backdrop-blur-xl transition-all duration-500 shadow-2xl ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 scale-105 shadow-[0_0_30px_rgba(255,255,51,0.4)]' : 'border-blue-500 scale-100 shadow-[0_0_20px_rgba(51,255,255,0.2)]') : 'border-neutral-800 opacity-60'}`}>
           <Target size={14} className={isFocusLocked ? 'neon-yellow' : 'neon-blue'} />
@@ -255,15 +250,15 @@ export const AgentVisualizer: React.FC<Props> = ({
 
       <canvas ref={canvasRef} width={300} height={300} className="w-full max-w-[300px] cursor-crosshair" />
 
-      {/* Info Tooltip Overlay */}
+      {/* Logic Overlays */}
       {focusedAgent && (
         <div className="absolute top-[25%] right-8 flex flex-col items-end gap-2 pointer-events-none max-w-[180px] text-right bg-black/80 p-3 border border-white/10 backdrop-blur-md rounded shadow-2xl">
            <span className="text-[8px] font-black uppercase text-neutral-400 tracking-[0.2em] leading-tight flex items-center gap-1.5">
-              <Info size={10} /> Double-Click to Lock Focus
+              <Info size={10} /> Double-Click node to Lock Focus
            </span>
            {!isFocusLocked && (
              <span className="text-[8px] font-black uppercase text-blue-500/90 tracking-[0.2em] leading-tight mt-1 animate-pulse">
-                Probing isolated node...
+                Probing isolated node domain...
              </span>
            )}
            {isFocusLocked && (
@@ -278,9 +273,9 @@ export const AgentVisualizer: React.FC<Props> = ({
       {focusedAgent && (
         <button 
           onClick={(e) => { e.stopPropagation(); onBackgroundClick(); }}
-          className="absolute bottom-14 right-8 flex items-center gap-3 bg-[#660000]/90 hover:bg-red-600 border border-red-400 text-white text-[10px] font-black uppercase px-8 py-3 rounded-sm transition-all shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:shadow-[0_0_40px_rgba(255,0,0,0.8)] active:scale-95 group z-20"
+          className="absolute bottom-14 right-8 flex items-center gap-3 bg-[#660000]/90 hover:bg-red-600 border border-red-400 text-white text-[10px] font-black uppercase px-10 py-4 rounded-sm transition-all shadow-[0_0_40px_rgba(255,0,0,0.4)] hover:shadow-[0_0_50px_rgba(255,0,0,0.7)] active:scale-95 group z-20"
         >
-          <X size={14} className="group-hover:rotate-90 transition-transform duration-300" />
+          <X size={16} className="group-hover:rotate-90 transition-transform duration-300" />
           Clear Focus
         </button>
       )}

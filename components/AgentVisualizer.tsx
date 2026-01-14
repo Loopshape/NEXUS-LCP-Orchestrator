@@ -98,7 +98,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         setFadeAlpha(prev => Math.max(0, prev - 0.05));
       }
 
-      // Draw Grid
+      // Grid
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < canvas.width; i += 30) {
@@ -108,7 +108,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
       }
 
-      // Connections
+      // Logic Connections
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -150,7 +150,10 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isFlashing = flashNode === role;
         const isFadingNode = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
-        // Glow Logic
+        // Visual Indicator States:
+        // - Focus Locked: static yellow glow (no pulsing)
+        // - Focused (Unlocked): bright cyan pulsing glow
+        // - Active but not focused: subtle green glow
         if (isFocused || isFadingNode) {
           const currentAlpha = isFocused ? 1 : fadeAlpha;
           const pulse = isFocusLocked ? 1 : (1 + Math.sin(time / 200) * 0.2);
@@ -173,7 +176,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.fill();
         }
 
-        // Core Node
+        // Body
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 12 : 8, 0, Math.PI * 2);
         
@@ -210,7 +213,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.fillText(role.toUpperCase(), x, y - 24);
       });
 
-      // Central Hub
+      // Continuum Hub
       ctx.beginPath();
       ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
       ctx.fillStyle = isProcessing ? '#ffff33' : (activeAgents.length > 0 ? '#33ff33' : '#ff3333');

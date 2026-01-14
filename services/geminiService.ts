@@ -14,11 +14,11 @@ export async function queryAgent(
   try {
     let systemInstruction = AGENT_SYSTEM_PROMPTS[role];
     
-    // Prepend focus-aware instruction
+    // Prepend focus-aware instruction as per protocol requirements
     if (focusedAgent && focusedAgent !== role) {
-      systemInstruction = `[ISOLATION_CONTEXT] As ${role}, prioritize analyzing the output from ${focusedAgent} and its implications for the current continuum state. Your specialized domain reasoning should specifically account for and verify the logic presented by ${focusedAgent}.\n\n${systemInstruction}`;
+      systemInstruction = `[CRITICAL_ANALYSIS_TASK] As ${role}, prioritize analyzing the output from ${focusedAgent} and its specific implications for the current continuum state. Your specialized domain reasoning should account for and strictly verify the logic presented by the focused node ${focusedAgent}.\n\n${systemInstruction}`;
     } else if (focusedAgent === role) {
-      systemInstruction = `[PRIMARY_FOCUS] You are currently the ISOLATED FOCUS node. Provide maximum depth, technical precision, and traceable logic. The rest of the ensemble is verifying your output.\n\n${systemInstruction}`;
+      systemInstruction = `[PRIMARY_ISOLATION_FOCUS] You are currently the ISOLATED FOCUS node. Provide maximum depth, technical precision, and traceable logic. The entire ensemble is monitoring and verifying your specific output.\n\n${systemInstruction}`;
     }
 
     const response = await ai.models.generateContent({

@@ -8,7 +8,7 @@ import { SemanticOutput } from './components/SemanticOutput';
 import { AgentModal } from './components/AgentModal';
 import { AGGREGATION_ORDER } from './constants';
 import { queryAgent, generateHashId } from './services/geminiService';
-import { Cpu, Terminal, History, BarChart2, Activity, Info, XCircle, Lock, Unlock, Sparkles, Target } from 'lucide-react';
+import { Cpu, Terminal, History, BarChart2, Activity, Info, XCircle, Sparkles, Target } from 'lucide-react';
 
 const App: React.FC = () => {
   const [readiness, setReadiness] = useState<Readiness>(Readiness.NULL);
@@ -71,25 +71,26 @@ const App: React.FC = () => {
   }, [readiness, isProcessing, history, focusedAgent]);
 
   const handleAgentClick = (role: AgentRole) => {
-    // When focus is locked, single clicks on nodes should do nothing.
+    // 1. If focus is locked, single clicks on other agent nodes should do nothing.
     if (isFocusLocked) return;
     
-    setFocusedAgent(role === focusedAgent ? null : role);
+    // 2. Clicking an agent node toggles its focus state.
+    setFocusedAgent(prev => (prev === role ? null : role));
   };
 
   const handleAgentDblClick = (role: AgentRole) => {
-    // If double clicking the already focused agent, toggle lock.
+    // Double-click toggles Focus Lock state.
     if (focusedAgent === role) {
       setIsFocusLocked(!isFocusLocked);
     } else {
-      // If double clicking a different agent, focus it and lock immediately.
+      // If clicking a different agent, focus and lock immediately.
       setFocusedAgent(role);
       setIsFocusLocked(true);
     }
   };
 
   const handleBackgroundClick = () => {
-    // Clicking background only resets if NOT locked, or use this as the master reset
+    // Clicking the canvas background should always clear any active agent focus.
     setFocusedAgent(null);
     setIsFocusLocked(false);
   };

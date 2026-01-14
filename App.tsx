@@ -8,8 +8,7 @@ import { SemanticOutput } from './components/SemanticOutput';
 import { AgentModal } from './components/AgentModal';
 import { AGGREGATION_ORDER } from './constants';
 import { queryAgent, generateHashId } from './services/geminiService';
-// Added Share2 to the imports from lucide-react
-import { Terminal, Cpu, Info, RefreshCcw, Focus, XCircle, History, Sparkles, Lock, Settings, BarChart3, Activity, Share2 } from 'lucide-react';
+import { Cpu, Terminal, History, BarChart2, Activity, Info, XCircle, Lock, Unlock, Sparkles } from 'lucide-react';
 
 const App: React.FC = () => {
   const [readiness, setReadiness] = useState<Readiness>(Readiness.NULL);
@@ -64,7 +63,7 @@ const App: React.FC = () => {
 
       setHistory(prev => [newState, ...prev]);
     } catch (error) {
-      console.error("LCP Runtime Error:", error);
+      console.error("RUNTIME_FAILURE:", error);
     } finally {
       setIsProcessing(false);
       setActiveAgents([]);
@@ -72,14 +71,15 @@ const App: React.FC = () => {
   }, [readiness, isProcessing, history, focusedAgent]);
 
   const handleAgentClick = (role: AgentRole) => {
-    if (!isFocusLocked) {
-      setFocusedAgent(role === focusedAgent ? null : role);
+    if (focusedAgent === role) {
+      // Toggle Focus Lock if already focused
+      setIsFocusLocked(prev => !prev);
+    } else {
+      // Only change focus if not locked
+      if (!isFocusLocked) {
+        setFocusedAgent(role);
+      }
     }
-  };
-
-  const handleAgentDblClick = (role: AgentRole) => {
-    setFocusedAgent(role);
-    setIsFocusLocked(true);
   };
 
   const handleBackgroundClick = () => {
@@ -103,151 +103,124 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Left Panel: Stats & Controls */}
-      <aside className="panel">
-        <div className="p-6 border-b border-white/5 bg-black/40">
-          <div className="flex items-center gap-3 mb-6">
-            <Cpu className="w-6 h-6 neon-blue glow-active" />
-            <div className="flex flex-col">
-              <h1 className="mono text-xs font-black neon-white tracking-widest uppercase">Nexus-LCP</h1>
-              <span className="text-[8px] neon-blue font-bold tracking-[0.5em] uppercase">Sovereign_OS</span>
-            </div>
-          </div>
-          <ReadinessIndicator readiness={readiness} />
+      {/* Left Panel: Controls & Metrics */}
+      <aside className="window-panel">
+        <div className="window-header">
+           <span>System_OS :: Stats</span>
+           <div className="flex gap-1">
+               <div className="w-2 h-2 rounded-full bg-yellow-500" />
+               <div className="w-2 h-2 rounded-full bg-green-500" />
+               <div className="w-2 h-2 rounded-full bg-blue-500" />
+           </div>
         </div>
+        <div className="window-content space-y-8">
+           <div className="flex flex-col items-center mb-6">
+              <Cpu className="w-10 h-10 neon-blue mb-2 pulse-active" />
+              <h1 className="text-sm font-black neon-white tracking-widest uppercase">Nexus-LCP v1.5</h1>
+              <span className="text-[8px] text-neutral-500 font-bold uppercase tracking-[0.4em]">Sovereign Runtime</span>
+           </div>
 
-        <div className="p-6 flex-grow flex flex-col gap-6 overflow-y-auto">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-neutral-600 uppercase mono text-[9px] font-black tracking-widest">
-              <div className="flex items-center gap-2"><BarChart3 size={12} /> Live Metrics</div>
-              <span className="neon-green">Live</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-black/40 p-3 rounded-lg border border-white/5 flex flex-col gap-1">
-                <span className="text-[8px] mono text-neutral-600">Continuum Depth</span>
-                <span className="text-sm mono neon-white font-black">{history.length}</span>
-              </div>
-              <div className="bg-black/40 p-3 rounded-lg border border-white/5 flex flex-col gap-1">
-                <span className="text-[8px] mono text-neutral-600">Active Units</span>
-                <span className="text-sm mono neon-green font-black">{activeAgents.length}/8</span>
-              </div>
-            </div>
-          </div>
+           <ReadinessIndicator readiness={readiness} />
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-neutral-600 uppercase mono text-[9px] font-black tracking-widest">
-              <Activity size={12} /> System Status
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-[10px] mono">
-                <span className="text-neutral-500">Latency</span>
-                <span className="neon-green">4ms</span>
+           <div className="space-y-4 pt-6 border-t border-red-900/30">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-widest">
+                 <BarChart2 size={12} /> Live Metrics
               </div>
-              <div className="flex justify-between items-center text-[10px] mono">
-                <span className="text-neutral-500">Stability</span>
-                <span className="neon-blue">Stable</span>
+              <div className="grid grid-cols-2 gap-2">
+                 <div className="bg-black/40 p-2 border border-green-900/30 rounded">
+                    <div className="text-[8px] text-neutral-600 uppercase">Depth</div>
+                    <div className="text-xs font-black neon-white">{history.length}</div>
+                 </div>
+                 <div className="bg-black/40 p-2 border border-green-900/30 rounded">
+                    <div className="text-[8px] text-neutral-600 uppercase">Units</div>
+                    <div className="text-xs font-black neon-green">{activeAgents.length}/8</div>
+                 </div>
               </div>
-              <div className="flex justify-between items-center text-[10px] mono">
-                <span className="text-neutral-500">Isolation</span>
-                <span className={focusedAgent ? 'neon-yellow' : 'neon-green'}>{focusedAgent ? 'Active' : 'Nominal'}</span>
+           </div>
+
+           <div className="space-y-4 pt-6 border-t border-red-900/30">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-red uppercase tracking-widest">
+                 <Activity size={12} /> Status Log
               </div>
-            </div>
-          </div>
+              <div className="text-[9px] space-y-2 mono text-neutral-500">
+                 <div className="flex justify-between"><span>Kernel</span> <span className="neon-green">OK</span></div>
+                 <div className="flex justify-between"><span>Ensemble</span> <span className="neon-green">ALIGNED</span></div>
+                 <div className="flex justify-between"><span>Entropy</span> <span className="neon-blue">0.002%</span></div>
+                 <div className="flex justify-between"><span>Uptime</span> <span className="neon-yellow">10:09:42</span></div>
+              </div>
+           </div>
         </div>
-
-        <div className="p-6 border-t border-white/5 bg-black/40">
-          <div className="flex items-center justify-between opacity-50 hover:opacity-100 transition-opacity">
-            <div className="flex items-center gap-2 mono text-[9px] font-black text-neutral-700">
-              <Settings size={12} /> Kernel_v1.5.2
-            </div>
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          </div>
+        <div className="p-2 border-t border-red-900/20 bg-black/40 text-[8px] text-center font-bold text-neutral-700 uppercase tracking-widest">
+            Protocol sovereign :: 0x00FF42
         </div>
       </aside>
 
-      {/* Main Panel: Trace Analytics & Workspace */}
-      <main className="panel relative">
-        <header className="px-8 py-6 border-b border-white/5 flex justify-between items-center sticky top-0 bg-[#050510]/80 backdrop-blur-xl z-20">
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col">
-              <h2 className="text-sm font-black neon-white tracking-widest uppercase mono">Cognitive Trace Analytics</h2>
-              <p className="text-[9px] text-neutral-600 uppercase mono tracking-[0.3em]">Runtime Lineage Log</p>
-            </div>
-            {focusedAgent && (
-              <div className={`px-4 py-1.5 rounded-lg border-2 flex items-center gap-2 transition-all ${isFocusLocked ? 'bg-yellow-900/20 border-yellow-500 text-yellow-100' : 'bg-blue-900/20 border-blue-500 text-blue-100'}`}>
-                {isFocusLocked ? <Lock size={12} className="neon-yellow" /> : <Focus size={12} className="neon-blue" />}
-                <span className="mono text-[10px] font-black uppercase tracking-widest">
-                  {isFocusLocked ? 'Focus Locked:' : 'Isolated:'} {focusedAgent}
-                </span>
-                <button onClick={() => {setFocusedAgent(null); setIsFocusLocked(false);}} className="ml-2 hover:text-white transition-colors">
-                  <XCircle size={12} />
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-             <span className="mono text-[9px] text-neutral-700 font-black">SOVEREIGN_RUN_STABLE</span>
-             <Sparkles size={12} className="neon-blue" />
-          </div>
-        </header>
-
-        <div className="flex-grow overflow-y-auto p-8 flex flex-col items-center">
-          {history.length === 0 ? (
-            <div className="flex-grow flex flex-col items-center justify-center text-center max-w-lg opacity-40">
-              <Cpu size={48} className="text-neutral-700 mb-6" />
-              <h3 className="text-2xl font-light text-white tracking-tighter mb-4">Initialize Continuum</h3>
-              <p className="text-sm text-neutral-500 leading-relaxed mono">Awaiting first prompt signal to establish hash anchor...</p>
-            </div>
-          ) : (
-            <div className="w-full max-w-4xl space-y-4">
-              {history.map(state => (
-                <SemanticOutput 
-                  key={state.id} 
-                  state={state} 
-                  focusedAgent={focusedAgent} 
-                  onAgentNameClick={openAgentModal}
-                  onReapplyFocus={reapplyFocus}
-                />
-              ))}
-            </div>
-          )}
+      {/* Center Panel: Workspace */}
+      <main className="window-panel">
+        <div className="window-header">
+           <span>Workspace :: Trace_Log</span>
+           <div className="flex items-center gap-3">
+              {focusedAgent && (
+                <div className={`flex items-center gap-2 px-2 py-0.5 rounded text-[9px] font-black uppercase transition-all ${isFocusLocked ? 'bg-yellow-500 text-black' : 'bg-blue-600 text-white'}`}>
+                    {isFocusLocked ? <Lock size={10} /> : <Unlock size={10} />}
+                    {isFocusLocked ? 'Focus Locked' : 'Isolated'}: {focusedAgent}
+                    <button onClick={handleBackgroundClick} className="ml-1 hover:text-black"><XCircle size={10} /></button>
+                </div>
+              )}
+              <Sparkles size={12} className="neon-blue" />
+           </div>
         </div>
-
-        <footer className="p-8 border-t border-white/5 bg-[#050510]/80 backdrop-blur-xl z-20">
-          <div className="max-w-4xl mx-auto w-full flex flex-col items-center">
-            <NexusInput onSend={handlePrompt} disabled={readiness !== Readiness.TWO_PI} isProcessing={isProcessing} />
-          </div>
-        </footer>
+        <div className="window-content flex flex-col items-center">
+           {history.length === 0 ? (
+             <div className="flex-grow flex flex-col items-center justify-center opacity-30 text-center space-y-4">
+                <Terminal size={48} className="text-neutral-500" />
+                <h2 className="text-lg font-black neon-white uppercase tracking-widest">Awaiting Pulse Signal</h2>
+                <p className="text-[9px] mono uppercase tracking-widest max-w-[200px]">Establish first hash anchor to begin cognitive extraction cycle.</p>
+             </div>
+           ) : (
+             <div className="w-full max-w-3xl">
+                {history.map(state => (
+                  <SemanticOutput 
+                    key={state.id} 
+                    state={state} 
+                    focusedAgent={focusedAgent} 
+                    onAgentNameClick={openAgentModal}
+                    onReapplyFocus={reapplyFocus}
+                  />
+                ))}
+             </div>
+           )}
+        </div>
+        <div className="p-4 border-t border-red-900/30 bg-[#050510]">
+           <NexusInput onSend={handlePrompt} disabled={readiness !== Readiness.TWO_PI} isProcessing={isProcessing} />
+        </div>
       </main>
 
-      {/* Right Panel: Network Topology */}
-      <aside className="panel border-l border-white/5">
-        <header className="p-6 border-b border-white/5 flex items-center gap-3">
-          <Share2 className="w-4 h-4 neon-blue" />
-          <h2 className="mono text-[10px] font-black neon-white uppercase tracking-widest">Network Topology</h2>
-        </header>
-        <div className="flex-grow p-4">
+      {/* Right Panel: Topology */}
+      <aside className="window-panel">
+        <div className="window-header">
+           <span>Network :: Topology</span>
+           <Info size={12} />
+        </div>
+        <div className="window-content p-0">
            <AgentVisualizer 
-             history={history} 
-             isProcessing={isProcessing} 
-             activeAgents={activeAgents} 
-             focusedAgent={focusedAgent}
-             isFocusLocked={isFocusLocked}
-             onAgentClick={handleAgentClick}
-             onAgentDblClick={handleAgentDblClick}
-             onBackgroundClick={handleBackgroundClick}
+              isProcessing={isProcessing} 
+              activeAgents={activeAgents} 
+              focusedAgent={focusedAgent}
+              isFocusLocked={isFocusLocked}
+              onAgentClick={handleAgentClick}
+              onBackgroundClick={handleBackgroundClick}
            />
         </div>
-        <div className="p-6 bg-black/40 border-t border-white/5">
-           <div className="flex items-center gap-3 mb-4">
-              <History size={14} className="text-neutral-500" />
-              <span className="mono text-[9px] font-black text-neutral-500 uppercase tracking-widest">Quick Anchors</span>
+        <div className="p-4 border-t border-red-900/30 bg-black/40">
+           <div className="flex items-center gap-2 text-[10px] font-black neon-white uppercase tracking-widest mb-3">
+              <History size={12} /> Recent Anchors
            </div>
-           <div className="space-y-2">
-             {history.slice(0, 5).map(h => (
-               <div key={h.id} className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer group">
-                 <span className="mono text-[9px] text-neutral-500 group-hover:neon-white">{h.id}</span>
-                 <span className="mono text-[8px] text-neutral-700">{new Date(h.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+           <div className="space-y-1.5">
+             {history.slice(0, 6).map(h => (
+               <div key={h.id} className="flex items-center justify-between px-2 py-1.5 rounded bg-black/40 border border-[#440000] hover:border-blue-500/50 transition-all cursor-pointer group">
+                  <span className="text-[9px] font-black text-neutral-500 group-hover:neon-blue">{h.id}</span>
+                  <span className="text-[8px] text-neutral-700 font-bold">{h.type.toUpperCase()}</span>
                </div>
              ))}
            </div>

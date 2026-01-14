@@ -11,108 +11,106 @@ interface Props {
 }
 
 const EPISTEMIC_EXAMPLES: Record<AgentRole, string[]> = {
-  [AgentRole.CORE]: ['Detecting logical contradictions', 'Ensuring adherence to core LCP principles', 'Identifying non-negotiable axioms'],
-  [AgentRole.CUBE]: ['Mapping multi-dimensional logic gaps', 'Validating structural coherence', 'Ensuring geometric/topological consistency'],
-  [AgentRole.LINE]: ['Tracing causal link failures', 'Sequencing chronological dependencies', 'Identifying logical "if-then" non-sequiturs'],
-  [AgentRole.SIGN]: ['Deconstructing semantic ambiguity', 'Analyzing symbol resonance', 'Standardizing linguistic precision'],
-  [AgentRole.WAVE]: ['Generating non-obvious alternatives', 'Exploring divergent thought paths', 'Synthesizing creative hypotheses'],
-  [AgentRole.COIN]: ['Final truth-polarity scoring', 'Assigning validation confidence levels', 'Filtering probabilistic noise'],
-  [AgentRole.LOOP]: ['Monitoring for convergence drift', 'Detecting semantic oscillation', 'Managing iteration termination'],
-  [AgentRole.WORK]: ['Constructing sovereign execution plans', 'Synthesizing multi-agent trace logs', 'Emitting deterministic protocol outputs']
+  [AgentRole.CORE]: ['detecting logical contradictions', 'ensuring adherence to core LCP principles', 'validating axiomatic base'],
+  [AgentRole.CUBE]: ['verifying structural geometry', 'ensuring dimensional consistency', 'mapping topological constraints'],
+  [AgentRole.LINE]: ['tracing causal failures', 'validating sequence linearity', 'detecting chronological drifts'],
+  [AgentRole.SIGN]: ['analyzing symbol ambiguity', 'verifying semantic precision', 'decoding linguistic intent'],
+  [AgentRole.WAVE]: ['generating divergent paths', 'exploring hypothesis breadth', 'synthesizing creative vectors'],
+  [AgentRole.COIN]: ['calculating truth polarity', 'assigning confidence scores', 'filtering noise thresholds'],
+  [AgentRole.LOOP]: ['monitoring convergence hubs', 'detecting semantic oscillation', 'triggering rehash cycles'],
+  [AgentRole.WORK]: ['compiling sovereign execution', 'synthesizing trace logs', 'emitting deterministic output']
 };
 
 export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
   const agent = AGENT_ENsemble.find(a => a.role === role);
   const examples = EPISTEMIC_EXAMPLES[role] || [];
   const index = AGGREGATION_ORDER.indexOf(role);
-  const prevAgent = index > 0 ? AGGREGATION_ORDER[index - 1] : 'ORIGIN';
-  const nextAgent = index < AGGREGATION_ORDER.length - 1 ? AGGREGATION_ORDER[index + 1] : 'OUTPUT';
+  const prevAgent = index > 0 ? AGGREGATION_ORDER[index - 1] : 'SYSTEM_ROOT';
+  const nextAgent = index < AGGREGATION_ORDER.length - 1 ? AGGREGATION_ORDER[index + 1] : 'CONTINUUM_EXIT';
 
   if (!agent) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className={`relative w-full max-w-2xl bg-[#0a0a0f] border-2 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 ${isFocused ? 'border-blue-500 shadow-blue-500/20' : 'border-neutral-800'}`}>
-        <div className={`flex items-center justify-between p-8 border-b border-white/5 ${isFocused ? 'bg-blue-900/10' : 'bg-black/20'}`}>
-          <div className="flex items-center gap-6">
-            <div className={`p-3 rounded-2xl border-2 transition-colors ${isFocused ? 'bg-blue-500 border-white' : 'bg-blue-600/10 border-blue-500/40'}`}>
-              <Cpu className={`w-8 h-8 ${isFocused ? 'text-white' : 'neon-blue'}`} />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black neon-white uppercase">{agent.role} <span className="text-[10px] mono text-neutral-500 tracking-[0.3em]">LCP_UNIT</span></h2>
-              <div className="flex items-center gap-2 mt-1">
-                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isFocused ? 'bg-white' : 'bg-blue-500'}`} />
-                <p className="text-[10px] mono neon-blue font-black uppercase tracking-widest">{agent.function}</p>
-              </div>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
+      <div 
+        onClick={(e) => e.stopPropagation()} 
+        className={`w-full max-w-xl bg-[#1a0510] border-2 rounded shadow-2xl overflow-hidden flex flex-col max-h-[90vh] ${isFocused ? 'border-yellow-500' : 'border-red-900'}`}
+      >
+        <div className="bg-gradient-to-r from-[#880000] to-[#440000] px-4 py-2 flex items-center justify-between border-b border-white/20">
+          <div className="flex items-center gap-3">
+            <Cpu size={16} className="text-white" />
+            <h2 className="text-xs font-black text-white uppercase tracking-widest">{agent.role} :: PROTOCOL_SPEC</h2>
+            {isFocused && <span className="bg-yellow-500 text-black text-[8px] font-bold px-1.5 rounded ml-2">ISOLATED</span>}
           </div>
-          <button onClick={onClose} className="text-neutral-600 hover:neon-white transition-all p-3 rounded-full border border-white/5"><X size={20} /></button>
+          <button onClick={onClose} className="text-white/80 hover:text-white"><X size={18} /></button>
         </div>
 
-        <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh]">
-          {/* Cognitive Pathways Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-neutral-600 uppercase mono text-[9px] font-black tracking-[0.4em]">
-              <Share2 size={12} className="neon-blue" />
-              Cognitive Pathways
-            </div>
-            <div className="flex items-center gap-8 bg-black/40 p-4 rounded-xl border border-white/5">
-              <div className="flex flex-col items-center gap-2 relative group">
-                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-                  <Zap size={16} className="neon-yellow" />
+        <div className="flex-grow overflow-y-auto p-6 space-y-8">
+          {/* Cognitive Pathways */}
+          <section className="space-y-3">
+             <div className="flex items-center gap-2 text-[10px] font-black neon-blue uppercase tracking-widest">
+                <Share2 size={12} /> Cognitive Pathways
+             </div>
+             <div className="grid grid-cols-3 items-center bg-black/40 p-4 border border-blue-900/30 rounded-lg">
+                <div className="flex flex-col items-center gap-1 group relative">
+                    <Zap size={16} className="neon-yellow" />
+                    <span className="text-[8px] font-bold text-neutral-500 uppercase">Input</span>
+                    <span className="text-[10px] font-black neon-white">{prevAgent}</span>
+                    <div className="absolute -top-12 scale-0 group-hover:scale-100 transition-transform bg-black border border-white/20 p-2 text-[8px] text-neutral-400 z-10 w-32 text-center pointer-events-none">
+                       Receives preceding semantic trace for domain processing.
+                    </div>
                 </div>
-                <span className="mono text-[8px] neon-yellow font-bold uppercase">Input</span>
-                <div className="absolute bottom-full mb-2 hidden group-hover:block bg-black p-2 border border-white/10 rounded shadow-xl whitespace-nowrap z-10">
-                  <div className="text-[8px] mono text-neutral-400">RECEIVING SIGNAL FROM:</div>
-                  <div className="text-[10px] mono neon-white font-bold">{prevAgent}</div>
+                <div className="flex justify-center">
+                    <div className="h-px w-full bg-gradient-to-r from-yellow-500 to-green-500 animate-pulse" />
                 </div>
-              </div>
-              <div className="h-px flex-grow bg-white/10 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-blue-500/20 to-green-500/20 animate-pulse" />
-              </div>
-              <div className="flex flex-col items-center gap-2 relative group">
-                <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/30">
-                  <Share2 size={16} className="neon-green" />
+                <div className="flex flex-col items-center gap-1 group relative">
+                    <Share2 size={16} className="neon-green" />
+                    <span className="text-[8px] font-bold text-neutral-500 uppercase">Output</span>
+                    <span className="text-[10px] font-black neon-white">{nextAgent}</span>
+                    <div className="absolute -top-12 scale-0 group-hover:scale-100 transition-transform bg-black border border-white/20 p-2 text-[8px] text-neutral-400 z-10 w-32 text-center pointer-events-none">
+                       Emits processed logic vector to subsequent ensemble node.
+                    </div>
                 </div>
-                <span className="mono text-[8px] neon-green font-bold uppercase">Output</span>
-                <div className="absolute bottom-full mb-2 hidden group-hover:block bg-black p-2 border border-white/10 rounded shadow-xl whitespace-nowrap z-10">
-                  <div className="text-[8px] mono text-neutral-400">EMITTING SIGNAL TO:</div>
-                  <div className="text-[10px] mono neon-white font-bold">{nextAgent}</div>
-                </div>
-              </div>
-            </div>
-          </div>
+             </div>
+          </section>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-neutral-600 uppercase mono text-[9px] font-black tracking-[0.4em]"><Shield size={12} className="neon-blue" /> Epistemic Domain</div>
-              <div className="bg-black/40 p-5 rounded-xl border border-white/5 space-y-3">
-                <p className="text-neutral-300 text-xs font-bold leading-relaxed">{agent.responsibility}</p>
-                <div className="space-y-1.5 pt-3 border-t border-white/5">
+          {/* Epistemic Boundary */}
+          <section className="grid grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-red uppercase tracking-widest"><Shield size={12} /> Epistemic Domain</div>
+              <div className="bg-black/30 p-4 border border-red-900/40 rounded-lg h-full">
+                <p className="text-[11px] font-bold text-neutral-200 mb-2">{agent.responsibility}</p>
+                <div className="space-y-1.5 border-t border-red-900/30 pt-2">
                   {examples.map((ex, i) => (
-                    <div key={i} className="flex items-start gap-2 text-[10px] text-neutral-500 mono">
+                    <div key={i} className="flex items-start gap-2 text-[9px] text-neutral-500 font-bold uppercase italic">
                       <CheckCircle2 size={10} className="neon-green mt-0.5" /> {ex}
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="space-y-4">
-               <div className="flex items-center gap-2 text-neutral-600 uppercase mono text-[9px] font-black tracking-[0.4em]"><Activity size={12} className="neon-green" /> Protocol Context</div>
-               <div className="bg-black/40 p-5 rounded-xl border border-white/5 h-full">
-                <p className="text-neutral-500 text-[10px] italic leading-relaxed">
-                  Unit {agent.role} enforces sovereign logical integrity. Focus mode optimizes trace analytics for high-precision verification.
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-widest"><Activity size={12} /> Logic Context</div>
+              <div className="bg-black/30 p-4 border border-green-900/40 rounded-lg h-full">
+                <p className="text-[10px] text-neutral-400 leading-relaxed italic">
+                  Unit ${agent.role} enforces sovereign logical continuity. In focus mode, domain precision is enhanced for cross-ensemble verification.
                 </p>
-               </div>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-neutral-600 uppercase mono text-[9px] font-black tracking-[0.4em]"><Terminal size={12} className="neon-yellow" /> System Kernel Instruction</div>
-            <div className="bg-black p-6 rounded-xl border border-white/10 font-mono text-[11px] leading-relaxed text-blue-300/80 shadow-inner">
+          {/* Kernel Instruction */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 text-[10px] font-black neon-yellow uppercase tracking-widest"><Terminal size={12} /> Kernel Instruction</div>
+            <div className="bg-black p-4 border border-yellow-900/30 rounded-lg font-mono text-[10px] text-blue-200 leading-relaxed">
               {AGENT_SYSTEM_PROMPTS[role]}
             </div>
-          </div>
+          </section>
+        </div>
+        
+        <div className="bg-[#110000] px-4 py-2 border-t border-white/10 flex justify-between items-center">
+            <span className="text-[8px] text-neutral-600 font-bold">LCP_UNIT_NODE_ID: 0x{role.toUpperCase()}</span>
+            <span className="text-[8px] neon-green font-bold">SOVEREIGN_SAFE_V1.5</span>
         </div>
       </div>
     </div>

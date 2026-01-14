@@ -14,15 +14,16 @@ export async function queryAgent(
   try {
     let systemInstruction = AGENT_SYSTEM_PROMPTS[role];
     
+    // Prepend instruction emphasizing the role in relation to the focused agent
     if (focusedAgent && focusedAgent !== role) {
-      systemInstruction = `[ISOLATION PROTOCOL] As ${role}, prioritize analyzing the output from ${focusedAgent} and its implications for the current continuum state. Integrate their logic into your own domain-specific reasoning to verify cross-agent consistency.\n\n${systemInstruction}`;
+      systemInstruction = `[CRITICAL CONTEXT] As ${role}, prioritize analyzing the output from ${focusedAgent} and its specific implications for the current continuum state. Your primary goal is to verify or challenge their logic based on your domain constraints.\n\n${systemInstruction}`;
     } else if (focusedAgent === role) {
-      systemInstruction = `[PRIMARY FOCUS] You are currently the focused agent in the ensemble. Provide maximum depth, technical precision, and traceable logic. All other agents will be verifying your output.\n\n${systemInstruction}`;
+      systemInstruction = `[ISOLATION MODE] You are currently the ISOLATED FOCUS. Provide maximum depth and technical precision. The entire ensemble is verifying your output.\n\n${systemInstruction}`;
     }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
-      contents: `Context: ${context}\n\nInput: ${input}`,
+      contents: `History Context: ${context}\n\nCurrent User Input: ${input}`,
       config: {
         systemInstruction,
         thinkingConfig: { thinkingBudget: 32768 },
@@ -32,10 +33,10 @@ export async function queryAgent(
       }
     });
     
-    return response.text || "Agent silent.";
+    return response.text || "NO_SIGNAL";
   } catch (error) {
     console.error(`Agent ${role} failed:`, error);
-    return `Error: Agent ${role} communication failed.`;
+    return `ERR: COMMUNICATION_FAILURE_NODE_${role.toUpperCase()}`;
   }
 }
 

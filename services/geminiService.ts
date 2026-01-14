@@ -14,16 +14,16 @@ export async function queryAgent(
   try {
     let systemInstruction = AGENT_SYSTEM_PROMPTS[role];
     
-    // Prepend instruction emphasizing the role in relation to the focused agent
+    // Prepend focus-aware instruction
     if (focusedAgent && focusedAgent !== role) {
-      systemInstruction = `[CRITICAL CONTEXT] As ${role}, prioritize analyzing the output from ${focusedAgent} and its specific implications for the current continuum state. Your primary goal is to verify or challenge their logic based on your domain constraints.\n\n${systemInstruction}`;
+      systemInstruction = `[ISOLATION_CONTEXT] As ${role}, prioritize analyzing the output from ${focusedAgent} and its implications for the current continuum state. Your specialized domain reasoning should specifically account for and verify the logic presented by ${focusedAgent}.\n\n${systemInstruction}`;
     } else if (focusedAgent === role) {
-      systemInstruction = `[ISOLATION MODE] You are currently the ISOLATED FOCUS. Provide maximum depth and technical precision. The entire ensemble is verifying your output.\n\n${systemInstruction}`;
+      systemInstruction = `[PRIMARY_FOCUS] You are currently the ISOLATED FOCUS node. Provide maximum depth, technical precision, and traceable logic. The rest of the ensemble is verifying your output.\n\n${systemInstruction}`;
     }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
-      contents: `History Context: ${context}\n\nCurrent User Input: ${input}`,
+      contents: `Runtime Context: ${context}\n\nSignal Input: ${input}`,
       config: {
         systemInstruction,
         thinkingConfig: { thinkingBudget: 32768 },
@@ -33,10 +33,10 @@ export async function queryAgent(
       }
     });
     
-    return response.text || "NO_SIGNAL";
+    return response.text || "NO_SIGNAL_RECORDED";
   } catch (error) {
     console.error(`Agent ${role} failed:`, error);
-    return `ERR: COMMUNICATION_FAILURE_NODE_${role.toUpperCase()}`;
+    return `ERROR_CODE: LCP_SIGNAL_LOSS_${role.toUpperCase()}`;
   }
 }
 

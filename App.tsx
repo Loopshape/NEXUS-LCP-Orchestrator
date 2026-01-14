@@ -8,7 +8,7 @@ import { SemanticOutput } from './components/SemanticOutput';
 import { AgentModal } from './components/AgentModal';
 import { AGGREGATION_ORDER } from './constants';
 import { queryAgent, generateHashId } from './services/geminiService';
-import { Cpu, Terminal, History, BarChart2, Activity, Info, XCircle, Lock, Unlock, Sparkles } from 'lucide-react';
+import { Cpu, Terminal, History, BarChart2, Activity, Info, XCircle, Lock, Unlock, Sparkles, Target } from 'lucide-react';
 
 const App: React.FC = () => {
   const [readiness, setReadiness] = useState<Readiness>(Readiness.NULL);
@@ -63,7 +63,7 @@ const App: React.FC = () => {
 
       setHistory(prev => [newState, ...prev]);
     } catch (error) {
-      console.error("RUNTIME_FAILURE:", error);
+      console.error("LCP_RUNTIME_FAILURE:", error);
     } finally {
       setIsProcessing(false);
       setActiveAgents([]);
@@ -72,10 +72,10 @@ const App: React.FC = () => {
 
   const handleAgentClick = (role: AgentRole) => {
     if (focusedAgent === role) {
-      // Toggle Focus Lock if already focused
+      // Toggle Focus Lock on re-click
       setIsFocusLocked(prev => !prev);
     } else {
-      // Only change focus if not locked
+      // Change focus only if not locked
       if (!isFocusLocked) {
         setFocusedAgent(role);
       }
@@ -83,8 +83,10 @@ const App: React.FC = () => {
   };
 
   const handleBackgroundClick = () => {
-    setFocusedAgent(null);
-    setIsFocusLocked(false);
+    if (!isFocusLocked || true) { // Always allow unlock via background click as safety
+        setFocusedAgent(null);
+        setIsFocusLocked(false);
+    }
   };
 
   const openAgentModal = (role: AgentRole) => setSelectedAgentForModal(role);
@@ -103,82 +105,85 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Left Panel: Controls & Metrics */}
+      {/* Panel: Stats & Controls */}
       <aside className="window-panel">
         <div className="window-header">
-           <span>System_OS :: Stats</span>
-           <div className="flex gap-1">
-               <div className="w-2 h-2 rounded-full bg-yellow-500" />
-               <div className="w-2 h-2 rounded-full bg-green-500" />
-               <div className="w-2 h-2 rounded-full bg-blue-500" />
+           <span>System_OS :: Extraction</span>
+           <div className="flex gap-1.5">
+               <div className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_5px_rgba(255,255,0,0.5)]" />
+               <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(0,255,0,0.5)]" />
+               <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_5px_rgba(0,0,255,0.5)]" />
            </div>
         </div>
-        <div className="window-content space-y-8">
-           <div className="flex flex-col items-center mb-6">
-              <Cpu className="w-10 h-10 neon-blue mb-2 pulse-active" />
-              <h1 className="text-sm font-black neon-white tracking-widest uppercase">Nexus-LCP v1.5</h1>
-              <span className="text-[8px] text-neutral-500 font-bold uppercase tracking-[0.4em]">Sovereign Runtime</span>
+        <div className="window-content space-y-10">
+           <div className="flex flex-col items-center py-6 border-b border-red-900/20">
+              <Cpu className="w-12 h-12 neon-blue mb-4 pulse-active" />
+              <h1 className="text-md font-black neon-white tracking-[0.3em] uppercase text-center">Nexus-LCP v1.5</h1>
+              <span className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.5em] mt-2">Sovereign Protocol Hub</span>
            </div>
 
            <ReadinessIndicator readiness={readiness} />
 
-           <div className="space-y-4 pt-6 border-t border-red-900/30">
-              <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-widest">
-                 <BarChart2 size={12} /> Live Metrics
+           <div className="space-y-6 pt-6 border-t border-red-900/30">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-[0.4em]">
+                 <BarChart2 size={14} /> Extraction Metrics
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                 <div className="bg-black/40 p-2 border border-green-900/30 rounded">
-                    <div className="text-[8px] text-neutral-600 uppercase">Depth</div>
-                    <div className="text-xs font-black neon-white">{history.length}</div>
+              <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-black/60 p-3 border-2 border-green-900/30 rounded-sm">
+                    <div className="text-[8px] text-neutral-600 font-bold uppercase mb-1">Depth</div>
+                    <div className="text-sm font-black neon-white">{history.length}</div>
                  </div>
-                 <div className="bg-black/40 p-2 border border-green-900/30 rounded">
-                    <div className="text-[8px] text-neutral-600 uppercase">Units</div>
-                    <div className="text-xs font-black neon-green">{activeAgents.length}/8</div>
+                 <div className="bg-black/60 p-3 border-2 border-green-900/30 rounded-sm">
+                    <div className="text-[8px] text-neutral-600 font-bold uppercase mb-1">Ensemble</div>
+                    <div className="text-sm font-black neon-green">{activeAgents.length}/8</div>
                  </div>
               </div>
            </div>
 
-           <div className="space-y-4 pt-6 border-t border-red-900/30">
-              <div className="flex items-center gap-2 text-[10px] font-black neon-red uppercase tracking-widest">
-                 <Activity size={12} /> Status Log
+           <div className="space-y-6 pt-6 border-t border-red-900/30">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-red uppercase tracking-[0.4em]">
+                 <Activity size={14} /> OS_Status Log
               </div>
-              <div className="text-[9px] space-y-2 mono text-neutral-500">
-                 <div className="flex justify-between"><span>Kernel</span> <span className="neon-green">OK</span></div>
-                 <div className="flex justify-between"><span>Ensemble</span> <span className="neon-green">ALIGNED</span></div>
-                 <div className="flex justify-between"><span>Entropy</span> <span className="neon-blue">0.002%</span></div>
-                 <div className="flex justify-between"><span>Uptime</span> <span className="neon-yellow">10:09:42</span></div>
+              <div className="text-[9px] space-y-3 font-bold text-neutral-500 uppercase">
+                 <div className="flex justify-between border-b border-white/5 pb-1"><span>Kernel</span> <span className="neon-green">SAFE</span></div>
+                 <div className="flex justify-between border-b border-white/5 pb-1"><span>Alignment</span> <span className="neon-green">NOMINAL</span></div>
+                 <div className="flex justify-between border-b border-white/5 pb-1"><span>Continuum</span> <span className="neon-blue">STABLE</span></div>
+                 <div className="flex justify-between border-b border-white/5 pb-1"><span>Runtime</span> <span className="neon-yellow">v1.5.0-LCP</span></div>
               </div>
            </div>
         </div>
-        <div className="p-2 border-t border-red-900/20 bg-black/40 text-[8px] text-center font-bold text-neutral-700 uppercase tracking-widest">
-            Protocol sovereign :: 0x00FF42
+        <div className="p-3 border-t-2 border-red-900/40 bg-[#050510] text-[9px] text-center font-black text-neutral-700 uppercase tracking-[0.4em]">
+            Protocol Sovereign :: 0xVJ_BLACK
         </div>
       </aside>
 
-      {/* Center Panel: Workspace */}
+      {/* Panel: Continuum Workspace */}
       <main className="window-panel">
         <div className="window-header">
-           <span>Workspace :: Trace_Log</span>
-           <div className="flex items-center gap-3">
+           <div className="flex items-center gap-2">
+              <Terminal size={12} className="neon-white" />
+              <span>Workspace :: Trace_Extraction</span>
+           </div>
+           <div className="flex items-center gap-4">
               {focusedAgent && (
-                <div className={`flex items-center gap-2 px-2 py-0.5 rounded text-[9px] font-black uppercase transition-all ${isFocusLocked ? 'bg-yellow-500 text-black' : 'bg-blue-600 text-white'}`}>
-                    {isFocusLocked ? <Lock size={10} /> : <Unlock size={10} />}
-                    {isFocusLocked ? 'Focus Locked' : 'Isolated'}: {focusedAgent}
-                    <button onClick={handleBackgroundClick} className="ml-1 hover:text-black"><XCircle size={10} /></button>
+                <div className={`flex items-center gap-2 px-3 py-0.5 rounded-sm text-[10px] font-black uppercase transition-all shadow-lg ${isFocusLocked ? 'bg-yellow-500 text-black border-2 border-white' : 'bg-blue-600 text-white border border-blue-400'}`}>
+                    <Target size={12} />
+                    {isFocusLocked ? 'FOCUS_LOCKED' : 'ISOLATED'}: {focusedAgent}
+                    <button onClick={handleBackgroundClick} className="ml-2 hover:opacity-70 transition-opacity"><XCircle size={12} /></button>
                 </div>
               )}
-              <Sparkles size={12} className="neon-blue" />
+              <Sparkles size={14} className="neon-blue" />
            </div>
         </div>
-        <div className="window-content flex flex-col items-center">
+        <div className="window-content flex flex-col items-center bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
            {history.length === 0 ? (
-             <div className="flex-grow flex flex-col items-center justify-center opacity-30 text-center space-y-4">
-                <Terminal size={48} className="text-neutral-500" />
-                <h2 className="text-lg font-black neon-white uppercase tracking-widest">Awaiting Pulse Signal</h2>
-                <p className="text-[9px] mono uppercase tracking-widest max-w-[200px]">Establish first hash anchor to begin cognitive extraction cycle.</p>
+             <div className="flex-grow flex flex-col items-center justify-center opacity-30 text-center space-y-6">
+                <Terminal size={64} className="text-neutral-500" />
+                <h2 className="text-xl font-black neon-white uppercase tracking-[0.5em]">Initialize Signal Hub</h2>
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] max-w-[300px]">Provide logical probe input to activate multi-agent extraction cycle.</p>
              </div>
            ) : (
-             <div className="w-full max-w-3xl">
+             <div className="w-full max-w-3xl py-4">
                 {history.map(state => (
                   <SemanticOutput 
                     key={state.id} 
@@ -191,18 +196,21 @@ const App: React.FC = () => {
              </div>
            )}
         </div>
-        <div className="p-4 border-t border-red-900/30 bg-[#050510]">
+        <div className="p-6 border-t-2 border-red-900/40 bg-[#020205] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
            <NexusInput onSend={handlePrompt} disabled={readiness !== Readiness.TWO_PI} isProcessing={isProcessing} />
         </div>
       </main>
 
-      {/* Right Panel: Topology */}
+      {/* Panel: Network Topology */}
       <aside className="window-panel">
         <div className="window-header">
-           <span>Network :: Topology</span>
-           <Info size={12} />
+           <div className="flex items-center gap-2">
+              <Activity size={12} className="neon-white" />
+              <span>Network :: Topology</span>
+           </div>
+           <Info size={14} className="neon-blue" />
         </div>
-        <div className="window-content p-0">
+        <div className="window-content p-0 border-b border-red-900/30">
            <AgentVisualizer 
               isProcessing={isProcessing} 
               activeAgents={activeAgents} 
@@ -212,15 +220,19 @@ const App: React.FC = () => {
               onBackgroundClick={handleBackgroundClick}
            />
         </div>
-        <div className="p-4 border-t border-red-900/30 bg-black/40">
-           <div className="flex items-center gap-2 text-[10px] font-black neon-white uppercase tracking-widest mb-3">
-              <History size={12} /> Recent Anchors
+        <div className="p-5 bg-black/40 h-[30%] flex flex-col">
+           <div className="flex items-center gap-3 mb-4">
+              <History size={14} className="neon-white" />
+              <span className="text-[10px] font-black neon-white uppercase tracking-[0.3em]">Lineage_Anchors</span>
            </div>
-           <div className="space-y-1.5">
-             {history.slice(0, 6).map(h => (
-               <div key={h.id} className="flex items-center justify-between px-2 py-1.5 rounded bg-black/40 border border-[#440000] hover:border-blue-500/50 transition-all cursor-pointer group">
-                  <span className="text-[9px] font-black text-neutral-500 group-hover:neon-blue">{h.id}</span>
-                  <span className="text-[8px] text-neutral-700 font-bold">{h.type.toUpperCase()}</span>
+           <div className="flex-grow overflow-y-auto space-y-2">
+             {history.slice(0, 8).map(h => (
+               <div key={h.id} className="flex items-center justify-between p-2.5 rounded-sm bg-black/40 border border-[#440000] hover:border-blue-500/50 transition-all cursor-pointer group">
+                  <span className="text-[10px] font-black text-neutral-600 group-hover:neon-blue tracking-widest">{h.id}</span>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[8px] text-neutral-700 font-bold uppercase italic">{h.type}</span>
+                    <div className={`w-1 h-1 rounded-full ${h.type === 'hash' ? 'bg-blue-500' : 'bg-green-500'}`} />
+                  </div>
                </div>
              ))}
            </div>

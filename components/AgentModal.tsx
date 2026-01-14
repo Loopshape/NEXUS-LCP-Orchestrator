@@ -2,7 +2,7 @@
 import React from 'react';
 import { AgentRole } from '../types';
 import { AGENT_ENsemble, AGENT_SYSTEM_PROMPTS, AGGREGATION_ORDER } from '../constants';
-import { X, Shield, Activity, Cpu, Terminal, BookOpen, CheckCircle2, Zap, Share2, Info } from 'lucide-react';
+import { X, Shield, Activity, Cpu, Terminal, BookOpen, CheckCircle2, Zap, Share2, Target } from 'lucide-react';
 
 interface Props {
   role: AgentRole;
@@ -11,106 +11,108 @@ interface Props {
 }
 
 const EPISTEMIC_EXAMPLES: Record<AgentRole, string[]> = {
-  [AgentRole.CORE]: ['detecting logical contradictions', 'ensuring adherence to core LCP principles', 'validating axiomatic base'],
-  [AgentRole.CUBE]: ['verifying structural geometry', 'ensuring dimensional consistency', 'mapping topological constraints'],
-  [AgentRole.LINE]: ['tracing causal failures', 'validating sequence linearity', 'detecting chronological drifts'],
-  [AgentRole.SIGN]: ['analyzing symbol ambiguity', 'verifying semantic precision', 'decoding linguistic intent'],
-  [AgentRole.WAVE]: ['generating divergent paths', 'exploring hypothesis breadth', 'synthesizing creative vectors'],
-  [AgentRole.COIN]: ['calculating truth polarity', 'assigning confidence scores', 'filtering noise thresholds'],
-  [AgentRole.LOOP]: ['monitoring convergence hubs', 'detecting semantic oscillation', 'triggering rehash cycles'],
-  [AgentRole.WORK]: ['compiling sovereign execution', 'synthesizing trace logs', 'emitting deterministic output']
+  [AgentRole.CORE]: ['Detecting logical contradictions', 'Ensuring adherence to core LCP principles', 'Validating base axioms'],
+  [AgentRole.CUBE]: ['Verifying structural geometry', 'Ensuring dimensional consistency', 'Mapping logic topology'],
+  [AgentRole.LINE]: ['Tracing causal chain failures', 'Sequencing chronological logic', 'Mapping temporal if-then loops'],
+  [AgentRole.SIGN]: ['Analyzing symbol ambiguity', 'Standardizing semantic precision', 'Decoding linguistic resonance'],
+  [AgentRole.WAVE]: ['Generating divergent hypotheses', 'Exploring alternate thought vectors', 'Synthesizing creative breadth'],
+  [AgentRole.COIN]: ['Calculating truth polarity', 'Assigning confidence scores', 'Filtering stochastic noise'],
+  [AgentRole.LOOP]: ['Monitoring for convergence drift', 'Detecting semantic oscillation', 'Managing rehash iterations'],
+  [AgentRole.WORK]: ['Compiling sovereign execution plans', 'Synthesizing trace logs', 'Emitting deterministic protocol outputs']
 };
 
 export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
   const agent = AGENT_ENsemble.find(a => a.role === role);
   const examples = EPISTEMIC_EXAMPLES[role] || [];
   const index = AGGREGATION_ORDER.indexOf(role);
-  const prevAgent = index > 0 ? AGGREGATION_ORDER[index - 1] : 'SYSTEM_ROOT';
-  const nextAgent = index < AGGREGATION_ORDER.length - 1 ? AGGREGATION_ORDER[index + 1] : 'CONTINUUM_EXIT';
+  const prevAgent = index > 0 ? AGGREGATION_ORDER[index - 1] : 'SYSTEM_INPUT';
+  const nextAgent = index < AGGREGATION_ORDER.length - 1 ? AGGREGATION_ORDER[index + 1] : 'SYSTEM_OUTPUT';
 
   if (!agent) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" onClick={onClose}>
       <div 
         onClick={(e) => e.stopPropagation()} 
-        className={`w-full max-w-xl bg-[#1a0510] border-2 rounded shadow-2xl overflow-hidden flex flex-col max-h-[90vh] ${isFocused ? 'border-yellow-500' : 'border-red-900'}`}
+        className={`w-full max-w-xl bg-[#0a0515] border-4 rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[95vh] ${isFocused ? 'border-blue-500 shadow-blue-500/30' : 'border-[#880000]'}`}
       >
-        <div className="bg-gradient-to-r from-[#880000] to-[#440000] px-4 py-2 flex items-center justify-between border-b border-white/20">
+        <div className={`px-4 py-2 flex items-center justify-between border-b-2 ${isFocused ? 'bg-gradient-to-r from-blue-900 to-blue-700 border-blue-400' : 'bg-gradient-to-r from-[#aa0000] to-[#440000] border-red-500'}`}>
           <div className="flex items-center gap-3">
-            <Cpu size={16} className="text-white" />
-            <h2 className="text-xs font-black text-white uppercase tracking-widest">{agent.role} :: PROTOCOL_SPEC</h2>
-            {isFocused && <span className="bg-yellow-500 text-black text-[8px] font-bold px-1.5 rounded ml-2">ISOLATED</span>}
+            <Cpu size={18} className="text-white" />
+            <h2 className="text-xs font-black text-white uppercase tracking-[0.2em]">{agent.role} :: PROTOCOL_SPEC_v1.5</h2>
+            {isFocused && <span className="bg-white text-blue-900 text-[9px] font-black px-2 rounded-full ml-2 animate-pulse">ISOLATED</span>}
           </div>
-          <button onClick={onClose} className="text-white/80 hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} className="text-white hover:neon-white transition-all"><X size={20} /></button>
         </div>
 
         <div className="flex-grow overflow-y-auto p-6 space-y-8">
           {/* Cognitive Pathways */}
-          <section className="space-y-3">
-             <div className="flex items-center gap-2 text-[10px] font-black neon-blue uppercase tracking-widest">
-                <Share2 size={12} /> Cognitive Pathways
+          <section className="space-y-4">
+             <div className="flex items-center gap-2 text-[10px] font-black neon-blue uppercase tracking-[0.5em]">
+                <Share2 size={14} /> Cognitive Pathways
              </div>
-             <div className="grid grid-cols-3 items-center bg-black/40 p-4 border border-blue-900/30 rounded-lg">
-                <div className="flex flex-col items-center gap-1 group relative">
-                    <Zap size={16} className="neon-yellow" />
-                    <span className="text-[8px] font-bold text-neutral-500 uppercase">Input</span>
-                    <span className="text-[10px] font-black neon-white">{prevAgent}</span>
-                    <div className="absolute -top-12 scale-0 group-hover:scale-100 transition-transform bg-black border border-white/20 p-2 text-[8px] text-neutral-400 z-10 w-32 text-center pointer-events-none">
-                       Receives preceding semantic trace for domain processing.
-                    </div>
+             <div className="grid grid-cols-3 items-center bg-black/60 p-5 border-2 border-white/5 rounded-sm relative">
+                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Input provided by ${prevAgent} node.`}>
+                    <Zap size={22} className="neon-yellow" />
+                    <span className="text-[9px] font-black neon-white uppercase">{prevAgent}</span>
+                    <span className="text-[7px] text-neutral-600 font-bold uppercase">Source_Probe</span>
                 </div>
                 <div className="flex justify-center">
-                    <div className="h-px w-full bg-gradient-to-r from-yellow-500 to-green-500 animate-pulse" />
+                    <div className="h-[2px] w-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 animate-pulse" />
                 </div>
-                <div className="flex flex-col items-center gap-1 group relative">
-                    <Share2 size={16} className="neon-green" />
-                    <span className="text-[8px] font-bold text-neutral-500 uppercase">Output</span>
-                    <span className="text-[10px] font-black neon-white">{nextAgent}</span>
-                    <div className="absolute -top-12 scale-0 group-hover:scale-100 transition-transform bg-black border border-white/20 p-2 text-[8px] text-neutral-400 z-10 w-32 text-center pointer-events-none">
-                       Emits processed logic vector to subsequent ensemble node.
-                    </div>
+                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Output processed and emitted to ${nextAgent} node.`}>
+                    <Share2 size={22} className="neon-green" />
+                    <span className="text-[9px] font-black neon-white uppercase">{nextAgent}</span>
+                    <span className="text-[7px] text-neutral-600 font-bold uppercase">Emission_Target</span>
                 </div>
              </div>
           </section>
 
-          {/* Epistemic Boundary */}
+          {/* Details Grid */}
           <section className="grid grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[10px] font-black neon-red uppercase tracking-widest"><Shield size={12} /> Epistemic Domain</div>
-              <div className="bg-black/30 p-4 border border-red-900/40 rounded-lg h-full">
-                <p className="text-[11px] font-bold text-neutral-200 mb-2">{agent.responsibility}</p>
-                <div className="space-y-1.5 border-t border-red-900/30 pt-2">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-red uppercase tracking-[0.4em]"><Shield size={14} /> Epistemic Domain</div>
+              <div className="bg-black/40 p-5 border-2 border-red-900/40 rounded-sm h-full shadow-inner">
+                <p className="text-[12px] font-black neon-white mb-3 uppercase leading-tight">{agent.responsibility}</p>
+                <div className="space-y-2 border-t border-red-900/30 pt-3">
                   {examples.map((ex, i) => (
-                    <div key={i} className="flex items-start gap-2 text-[9px] text-neutral-500 font-bold uppercase italic">
-                      <CheckCircle2 size={10} className="neon-green mt-0.5" /> {ex}
+                    <div key={i} className="flex items-start gap-2 text-[9px] text-neutral-400 font-bold uppercase italic leading-tight">
+                      <CheckCircle2 size={12} className="neon-green mt-0.5" /> {ex}
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-widest"><Activity size={12} /> Logic Context</div>
-              <div className="bg-black/30 p-4 border border-green-900/40 rounded-lg h-full">
-                <p className="text-[10px] text-neutral-400 leading-relaxed italic">
-                  Unit ${agent.role} enforces sovereign logical continuity. In focus mode, domain precision is enhanced for cross-ensemble verification.
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-[0.4em]"><Activity size={14} /> Continuum Context</div>
+              <div className="bg-black/40 p-5 border-2 border-green-900/40 rounded-sm h-full shadow-inner">
+                <p className="text-[11px] text-neutral-300 leading-relaxed font-medium">
+                  Protocol node ${agent.role} enforces sovereign logical integrity within the {agent.role.toLowerCase()} domain.
                 </p>
+                <div className="mt-4 p-2 bg-green-900/20 border border-green-500/20 text-[9px] text-green-400 mono">
+                   ROLE_ID: AG_PROT_{role.toUpperCase()}<br/>
+                   CONF_V: 1.0.52_STABLE
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Kernel Instruction */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2 text-[10px] font-black neon-yellow uppercase tracking-widest"><Terminal size={12} /> Kernel Instruction</div>
-            <div className="bg-black p-4 border border-yellow-900/30 rounded-lg font-mono text-[10px] text-blue-200 leading-relaxed">
-              {AGENT_SYSTEM_PROMPTS[role]}
+          {/* System Prompt Logic */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 text-[10px] font-black neon-yellow uppercase tracking-[0.4em]"><Terminal size={14} /> Kernel Kernel Instruction</div>
+            <div className="bg-black/80 p-5 border-2 border-yellow-900/30 rounded-sm font-mono text-[11px] text-blue-200 leading-relaxed shadow-lg relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-30" />
+               {AGENT_SYSTEM_PROMPTS[role]}
             </div>
           </section>
         </div>
         
-        <div className="bg-[#110000] px-4 py-2 border-t border-white/10 flex justify-between items-center">
-            <span className="text-[8px] text-neutral-600 font-bold">LCP_UNIT_NODE_ID: 0x{role.toUpperCase()}</span>
-            <span className="text-[8px] neon-green font-bold">SOVEREIGN_SAFE_V1.5</span>
+        <div className="bg-[#050510] px-4 py-2 border-t-2 border-red-900/30 flex justify-between items-center">
+            <span className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.2em]">Hash_Signature: 0x{role.toUpperCase()}</span>
+            <div className="flex items-center gap-2">
+               <span className="text-[9px] neon-green font-black">ENFORCEMENT_NOMINAL</span>
+               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            </div>
         </div>
       </div>
     </div>

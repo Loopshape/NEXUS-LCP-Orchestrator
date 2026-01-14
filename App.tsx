@@ -71,22 +71,22 @@ const App: React.FC = () => {
   }, [readiness, isProcessing, history, focusedAgent]);
 
   const handleAgentClick = (role: AgentRole) => {
+    if (isFocusLocked) return; // Ignore single clicks when locked
+    setFocusedAgent(role === focusedAgent ? null : role);
+  };
+
+  const handleAgentDblClick = (role: AgentRole) => {
     if (focusedAgent === role) {
-      // Toggle Focus Lock on re-click
-      setIsFocusLocked(prev => !prev);
+      setIsFocusLocked(!isFocusLocked);
     } else {
-      // Change focus only if not locked
-      if (!isFocusLocked) {
-        setFocusedAgent(role);
-      }
+      setFocusedAgent(role);
+      setIsFocusLocked(true);
     }
   };
 
   const handleBackgroundClick = () => {
-    if (!isFocusLocked || true) { // Always allow unlock via background click as safety
-        setFocusedAgent(null);
-        setIsFocusLocked(false);
-    }
+    setFocusedAgent(null);
+    setIsFocusLocked(false);
   };
 
   const openAgentModal = (role: AgentRole) => setSelectedAgentForModal(role);
@@ -217,6 +217,7 @@ const App: React.FC = () => {
               focusedAgent={focusedAgent}
               isFocusLocked={isFocusLocked}
               onAgentClick={handleAgentClick}
+              onAgentDblClick={handleAgentDblClick}
               onBackgroundClick={handleBackgroundClick}
            />
         </div>

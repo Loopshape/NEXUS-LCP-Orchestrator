@@ -73,10 +73,17 @@ export const SemanticOutput: React.FC<Props> = ({ state, focusedAgent, onAgentNa
                 return (
                   <div key={role} className={`p-3 rounded-sm border-2 transition-all ${isTarget ? 'border-yellow-500 bg-yellow-900/10 shadow-[0_0_15px_rgba(255,255,51,0.1)]' : 'border-[#440000] bg-black/20'}`}>
                     <div className="flex justify-between items-center mb-2">
-                      <button onClick={() => onAgentNameClick(role)} className="flex items-center gap-2 group">
-                        <div className={`w-2 h-2 rounded-full ${isTarget ? 'bg-yellow-400' : 'bg-neutral-800 group-hover:bg-red-500'}`} />
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${isTarget ? 'neon-yellow' : 'text-neutral-500 group-hover:neon-red'}`}>{role}</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => onAgentNameClick(role)} className="flex items-center gap-2 group">
+                          <div className={`w-2 h-2 rounded-full ${isTarget ? 'bg-yellow-400' : 'bg-neutral-800 group-hover:bg-red-500'}`} />
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isTarget ? 'neon-yellow' : 'text-neutral-500 group-hover:neon-red'}`}>{role}</span>
+                        </button>
+                        {isTarget && (
+                          <div className="flex items-center bg-yellow-500/10 border border-yellow-500/30 px-1.5 py-0.5 rounded-sm">
+                            <Target size={10} className="neon-yellow" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         {isTarget && <Crosshair size={12} className="neon-yellow animate-pulse" />}
                         <button onClick={() => onReapplyFocus?.(isTarget ? null : role)} className="text-neutral-600 hover:neon-blue transition-colors">

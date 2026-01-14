@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AgentRole } from '../types';
 import { AGENT_ENsemble, AGENT_SYSTEM_PROMPTS, AGGREGATION_ORDER } from '../constants';
-import { X, Shield, Activity, Cpu, Terminal, CheckCircle2, Zap, Share2, Copy, Check } from 'lucide-react';
+import { X, Shield, Activity, Cpu, Terminal, CheckCircle2, Zap, Share2, Copy, Check, Network } from 'lucide-react';
 
 interface Props {
   role: AgentRole;
@@ -62,16 +62,16 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
                 <Share2 size={14} /> Cognitive Pathways
              </div>
              <div className="grid grid-cols-3 items-center bg-black/60 p-5 border-2 border-white/5 rounded-sm relative">
-                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Input provided by ${prevAgent} node.`}>
+                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Logical input vector received from upstream node: ${prevAgent}`}>
                     <Zap size={22} className="neon-yellow" />
                     <span className="text-[9px] font-black neon-white uppercase">{prevAgent}</span>
-                    <span className="text-[7px] text-neutral-600 font-bold uppercase">Source_Probe</span>
+                    <span className="text-[7px] text-neutral-600 font-bold uppercase">Signal_Source</span>
                 </div>
                 <div className="flex justify-center">
                     <div className="h-[2px] w-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 animate-pulse" />
                 </div>
-                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Output processed and emitted to ${nextAgent} node.`}>
-                    <Share2 size={22} className="neon-green" />
+                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Semantic emission transmitted to downstream node: ${nextAgent}`}>
+                    <Network size={22} className="neon-green" />
                     <span className="text-[9px] font-black neon-white uppercase">{nextAgent}</span>
                     <span className="text-[7px] text-neutral-600 font-bold uppercase">Emission_Target</span>
                 </div>

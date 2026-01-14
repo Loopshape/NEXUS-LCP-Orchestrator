@@ -2,7 +2,7 @@
 import React from 'react';
 import { SemanticState, AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
-import { ChevronDown, ChevronUp, Terminal, ShieldAlert, Crosshair, Database, Target } from 'lucide-react';
+import { ChevronDown, ChevronUp, Terminal, ShieldAlert, Crosshair, Database, Target, AlertCircle } from 'lucide-react';
 
 interface Props {
   state: SemanticState;
@@ -20,7 +20,7 @@ export const SemanticOutput: React.FC<Props> = ({ state, focusedAgent, onAgentNa
     : AGGREGATION_ORDER;
 
   return (
-    <div className={`mb-6 border-l-4 bg-[#0a0510] border-2 rounded-sm shadow-xl transition-all duration-500 ${focusedAgent ? 'border-blue-500/80' : 'border-[#880000]'}`}>
+    <div className={`mb-6 border-l-4 bg-[#0a0510] border-2 rounded-sm shadow-xl transition-all duration-500 ${focusedAgent ? 'border-blue-500/80 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'border-[#880000]'}`}>
       {/* Custom Beveled Title Bar */}
       <div className={`px-3 py-1.5 flex items-center justify-between border-b ${focusedAgent ? 'bg-blue-900/40 border-blue-500/50' : 'bg-gradient-to-r from-[#660000] to-[#220000] border-[#880000]'}`}>
         <div className="flex items-center gap-3">
@@ -78,21 +78,26 @@ export const SemanticOutput: React.FC<Props> = ({ state, focusedAgent, onAgentNa
                           <div className={`w-2 h-2 rounded-full ${isTarget ? 'bg-yellow-400' : 'bg-neutral-800 group-hover:bg-red-500'}`} />
                           <span className={`text-[10px] font-black uppercase tracking-widest ${isTarget ? 'neon-yellow' : 'text-neutral-500 group-hover:neon-red'}`}>{role}</span>
                         </button>
-                        {isTarget && (
-                          <div className="flex items-center bg-yellow-500/10 border border-yellow-500/30 px-1.5 py-0.5 rounded-sm">
-                            <Target size={10} className="neon-yellow" />
+                        {/* Prompt request: Small distinct neon yellow icon when filtered (isolation is active) */}
+                        {focusedAgent && isTarget && (
+                          <div className="flex items-center bg-yellow-500/20 border border-yellow-500/50 px-1.5 py-0.5 rounded-sm animate-pulse">
+                            <AlertCircle size={10} className="neon-yellow" />
                           </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
                         {isTarget && <Crosshair size={12} className="neon-yellow animate-pulse" />}
-                        <button onClick={() => onReapplyFocus?.(isTarget ? null : role)} className="text-neutral-600 hover:neon-blue transition-colors">
+                        <button 
+                          onClick={() => onReapplyFocus?.(isTarget ? null : role)} 
+                          className="text-neutral-600 hover:neon-blue transition-colors p-1"
+                          title={isTarget ? "Release focus" : "Focus this agent"}
+                        >
                           <Target size={14} />
                         </button>
                       </div>
                     </div>
                     <p className="text-[11px] text-neutral-400 bg-black/40 p-2 border border-white/5 rounded-sm mono leading-relaxed">
-                      {state.agentOutputs[role] || "ERR: NO_SIGNAL"}
+                      {state.agentOutputs[role] || "ERR: NO_SIGNAL_EXTRACTED"}
                     </p>
                   </div>
                 );
@@ -100,7 +105,7 @@ export const SemanticOutput: React.FC<Props> = ({ state, focusedAgent, onAgentNa
               
               {focusedAgent && (
                 <div className="p-3 bg-black/30 border border-red-900/20 rounded-sm text-center">
-                  <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-widest">Remaining outputs suppressed for continuum stability</span>
+                  <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-widest opacity-60">Remaining outputs suppressed for continuum target verification</span>
                 </div>
               )}
             </div>

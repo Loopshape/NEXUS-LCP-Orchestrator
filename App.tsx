@@ -71,20 +71,25 @@ const App: React.FC = () => {
   }, [readiness, isProcessing, history, focusedAgent]);
 
   const handleAgentClick = (role: AgentRole) => {
-    if (isFocusLocked) return; // Ignore single clicks when locked
+    // When focus is locked, single clicks on nodes should do nothing.
+    if (isFocusLocked) return;
+    
     setFocusedAgent(role === focusedAgent ? null : role);
   };
 
   const handleAgentDblClick = (role: AgentRole) => {
+    // If double clicking the already focused agent, toggle lock.
     if (focusedAgent === role) {
       setIsFocusLocked(!isFocusLocked);
     } else {
+      // If double clicking a different agent, focus it and lock immediately.
       setFocusedAgent(role);
       setIsFocusLocked(true);
     }
   };
 
   const handleBackgroundClick = () => {
+    // Clicking background only resets if NOT locked, or use this as the master reset
     setFocusedAgent(null);
     setIsFocusLocked(false);
   };

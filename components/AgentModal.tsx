@@ -26,8 +26,8 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
   const agent = AGENT_ENsemble.find(a => a.role === role);
   const examples = EPISTEMIC_EXAMPLES[role] || [];
   const index = AGGREGATION_ORDER.indexOf(role);
-  const prevAgent = index > 0 ? AGGREGATION_ORDER[index - 1] : 'SYSTEM_INPUT';
-  const nextAgent = index < AGGREGATION_ORDER.length - 1 ? AGGREGATION_ORDER[index + 1] : 'SYSTEM_OUTPUT';
+  const prevAgent = index > 0 ? AGGREGATION_ORDER[index - 1] : 'SYSTEM_ROOT';
+  const nextAgent = index < AGGREGATION_ORDER.length - 1 ? AGGREGATION_ORDER[index + 1] : 'CONTINUUM_EXIT';
 
   if (!agent) return null;
 
@@ -56,24 +56,31 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
         </div>
 
         <div className="flex-grow overflow-y-auto p-6 space-y-8">
-          {/* Cognitive Pathways */}
+          {/* Cognitive Pathways - Visually representing flow with Bolt and Network icons */}
           <section className="space-y-4">
              <div className="flex items-center gap-2 text-[10px] font-black neon-blue uppercase tracking-[0.5em]">
                 <Share2 size={14} /> Cognitive Pathways
              </div>
-             <div className="grid grid-cols-3 items-center bg-black/60 p-5 border-2 border-white/5 rounded-sm relative">
-                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Logical input vector received from upstream node: ${prevAgent}`}>
+             <div className="grid grid-cols-3 items-center bg-black/60 p-5 border-2 border-white/5 rounded-sm relative shadow-inner">
+                <div 
+                  className="flex flex-col items-center gap-2 group cursor-help" 
+                  title={`Logical input vector received from upstream ensemble node: ${prevAgent}`}
+                >
                     <Zap size={22} className="neon-yellow" />
                     <span className="text-[9px] font-black neon-white uppercase">{prevAgent}</span>
-                    <span className="text-[7px] text-neutral-600 font-bold uppercase">Signal_Source</span>
+                    <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Protocol_Input</span>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center justify-center px-4">
                     <div className="h-[2px] w-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 animate-pulse" />
+                    <span className="text-[6px] font-black text-neutral-700 uppercase mt-1">Processing_Domain</span>
                 </div>
-                <div className="flex flex-col items-center gap-2 group cursor-help" title={`Semantic emission transmitted to downstream node: ${nextAgent}`}>
+                <div 
+                  className="flex flex-col items-center gap-2 group cursor-help" 
+                  title={`Semantic emission transmitted to downstream ensemble node: ${nextAgent}`}
+                >
                     <Network size={22} className="neon-green" />
                     <span className="text-[9px] font-black neon-white uppercase">{nextAgent}</span>
-                    <span className="text-[7px] text-neutral-600 font-bold uppercase">Emission_Target</span>
+                    <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Logic_Emission</span>
                 </div>
              </div>
           </section>
@@ -97,11 +104,11 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
               <div className="flex items-center gap-2 text-[10px] font-black neon-green uppercase tracking-[0.4em]"><Activity size={14} /> Continuum Context</div>
               <div className="bg-black/40 p-5 border-2 border-green-900/40 rounded-sm h-full shadow-inner">
                 <p className="text-[11px] text-neutral-300 leading-relaxed font-medium">
-                  Protocol node {agent.role} enforces sovereign logical integrity within the {agent.role.toLowerCase()} domain.
+                  Protocol node {agent.role} enforces sovereign logical integrity within the {agent.role.toLowerCase()} domain. Ensuring zero-drift alignment.
                 </p>
                 <div className="mt-4 p-2 bg-green-900/20 border border-green-500/20 text-[9px] text-green-400 mono">
                    ROLE_ID: AG_PROT_{role.toUpperCase()}<br/>
-                   CONF_V: 1.0.52_STABLE
+                   CONF_V: 1.0.52_STABLE_ENF
                 </div>
               </div>
             </div>
@@ -115,14 +122,14 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
               </div>
               <button 
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 text-[9px] font-black uppercase text-neutral-400 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-[9px] font-black uppercase text-neutral-400 hover:text-white transition-all bg-white/5 px-2 py-1 rounded border border-white/10"
               >
                 {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                 {copied ? 'Copied' : 'Copy Prompt'}
               </button>
             </div>
-            <div className="bg-black/80 p-5 border-2 border-yellow-900/30 rounded-sm font-mono text-[11px] text-blue-200 leading-relaxed shadow-lg relative overflow-hidden">
-               <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-30" />
+            <div className="bg-black/80 p-5 border-2 border-yellow-900/30 rounded-sm font-mono text-[11px] text-blue-200 leading-relaxed shadow-lg relative overflow-hidden group">
+               <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-30 group-hover:opacity-100 transition-opacity" />
                {AGENT_SYSTEM_PROMPTS[role]}
             </div>
           </section>
@@ -132,7 +139,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
             <span className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.2em]">Hash_Signature: 0x{role.toUpperCase()}</span>
             <div className="flex items-center gap-2">
                <span className="text-[9px] neon-green font-black">ENFORCEMENT_NOMINAL</span>
-               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
             </div>
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,6 +99,14 @@
             to { opacity: 0; filter: blur(4px); }
         }
         .focus-fade-out { animation: fade-out-focus 0.5s forwards; }
+
+        @keyframes path-flow {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .animate-path-flow {
+            animation: path-flow 3s linear infinite;
+        }
     </style>
 <script type="importmap">
 {

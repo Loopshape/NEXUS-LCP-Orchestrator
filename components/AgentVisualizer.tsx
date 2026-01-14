@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
@@ -31,7 +30,7 @@ export const AgentVisualizer: React.FC<Props> = ({
       setFadeAlpha(1);
     }
     setPreviousFocused(focusedAgent);
-  }, [focusedAgent]);
+  }, [focusedAgent, previousFocused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -55,7 +54,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
-        const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+        const dist = Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2));
         if (dist < 22) {
           onAgentClick(role);
           hit = true;
@@ -77,7 +76,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
-        const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+        const dist = Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2));
         if (dist < 22) {
           onAgentDblClick(role);
         }
@@ -99,7 +98,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         setFadeAlpha(prev => Math.max(0, prev - 0.05));
       }
 
-      // Draw Topology Grid
+      // Draw Grid
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < canvas.width; i += 30) {
@@ -109,7 +108,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
       }
 
-      // Logic Path Connections
+      // Connections
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -141,7 +140,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.shadowBlur = 0;
       });
 
-      // Ensemble Nodes
+      // Nodes
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -151,10 +150,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isFlashing = flashNode === role;
         const isFadingNode = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
-        // Visual States as requested:
-        // 1. Subtle green glow for active but not focused
-        // 2. Bright cyan pulsing glow for focused but not locked
-        // 3. Static yellow glow for focus locked
+        // Glow Logic
         if (isFocused || isFadingNode) {
           const currentAlpha = isFocused ? 1 : fadeAlpha;
           const pulse = isFocusLocked ? 1 : (1 + Math.sin(time / 200) * 0.2);
@@ -177,7 +173,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.fill();
         }
 
-        // Node Body
+        // Core Node
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 12 : 8, 0, Math.PI * 2);
         
@@ -205,7 +201,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.stroke();
         }
 
-        // Label
+        // Labels
         ctx.shadowBlur = 0;
         ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffff33' : '#33ffff') : (isActive ? '#33ff33' : '#666');
         if (isFadingNode) ctx.fillStyle = `rgba(51, 255, 255, ${fadeAlpha})`;
@@ -214,7 +210,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.fillText(role.toUpperCase(), x, y - 24);
       });
 
-      // Hub
+      // Central Hub
       ctx.beginPath();
       ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
       ctx.fillStyle = isProcessing ? '#ffff33' : (activeAgents.length > 0 ? '#33ff33' : '#ff3333');
@@ -231,11 +227,10 @@ export const AgentVisualizer: React.FC<Props> = ({
       canvas.removeEventListener('click', handleInteraction);
       canvas.removeEventListener('dblclick', handleDblClickInteraction);
     };
-  }, [activeAgents, isProcessing, focusedAgent, isFocusLocked, flashNode, fadeAlpha]);
+  }, [activeAgents, isProcessing, focusedAgent, isFocusLocked, flashNode, fadeAlpha, previousFocused, onAgentClick, onAgentDblClick, onBackgroundClick]);
 
   return (
     <div className="h-full flex flex-col items-center justify-center relative p-2 overflow-hidden bg-black/20">
-      {/* Topology Header Indicator */}
       <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none z-10">
         <div className={`flex items-center gap-3 px-5 py-2 rounded-full border bg-black/80 backdrop-blur-xl transition-all duration-500 shadow-2xl ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 scale-105 shadow-[0_0_30px_rgba(255,255,51,0.4)]' : 'border-blue-500 scale-100 shadow-[0_0_20px_rgba(51,255,255,0.2)]') : 'border-neutral-800 opacity-60'}`}>
           <Target size={14} className={isFocusLocked ? 'neon-yellow' : 'neon-blue'} />
@@ -248,7 +243,6 @@ export const AgentVisualizer: React.FC<Props> = ({
 
       <canvas ref={canvasRef} width={300} height={300} className="w-full max-w-[300px] cursor-crosshair" />
 
-      {/* Guidance Tooltip */}
       {focusedAgent && (
         <div className="absolute top-[25%] right-8 flex flex-col items-end gap-2 pointer-events-none max-w-[180px] text-right bg-black/80 p-3 border border-white/10 backdrop-blur-md rounded shadow-2xl">
            <span className="text-[8px] font-black uppercase text-neutral-400 tracking-[0.2em] leading-tight flex items-center gap-1.5">
@@ -267,7 +261,6 @@ export const AgentVisualizer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Prominent Clear Focus Button */}
       {focusedAgent && (
         <button 
           onClick={(e) => { e.stopPropagation(); onBackgroundClick(); }}

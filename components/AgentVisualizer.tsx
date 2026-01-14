@@ -20,7 +20,7 @@ export const AgentVisualizer: React.FC<Props> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [flashNode, setFlashNode] = useState<AgentRole | null>(null);
   const [previousFocused, setPreviousFocused] = useState<AgentRole | null>(null);
-  const [fadeAlpha, setFadeAlpha] = useState(0); // For focus indicator decay
+  const [fadeAlpha, setFadeAlpha] = useState(0); 
 
   useEffect(() => {
     if (focusedAgent) {
@@ -95,7 +95,7 @@ export const AgentVisualizer: React.FC<Props> = ({
       const radius = 90;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
-      // Handle focus indicator fade out
+      // Decay logic for focus fade-out
       if (!focusedAgent && fadeAlpha > 0) {
         setFadeAlpha(prev => Math.max(0, prev - 0.05));
       }
@@ -110,7 +110,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
       }
 
-      // Connections
+      // Draw Connections (Logic Paths)
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -142,7 +142,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.shadowBlur = 0;
       });
 
-      // Nodes
+      // Draw Ensemble Nodes
       AGGREGATION_ORDER.forEach((role, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * radius;
@@ -152,12 +152,15 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isFlashing = flashNode === role;
         const isFadingNode = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
-        // Node Glows
+        // Visual Status Glows as specified:
+        // - Focus Locked: static yellow glow
+        // - Focused (Unlocked): bright cyan glow (pulsing)
+        // - Active but not focused: subtle green glow
         if (isFocused || isFadingNode) {
           const currentAlpha = isFocused ? 1 : fadeAlpha;
           const haloSize = (isFocusLocked ? 30 : (25 + Math.sin(time / 200) * 5)) * currentAlpha;
           const gradient = ctx.createRadialGradient(x, y, 5, x, y, haloSize);
-          gradient.addColorStop(0, isFocusLocked ? `rgba(255, 255, 51, ${0.35 * currentAlpha})` : `rgba(51, 255, 255, ${0.25 * currentAlpha})`);
+          gradient.addColorStop(0, isFocusLocked ? `rgba(255, 255, 51, ${0.4 * currentAlpha})` : `rgba(51, 255, 255, ${0.3 * currentAlpha})`);
           gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = gradient;
           ctx.beginPath();
@@ -174,7 +177,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.fill();
         }
 
-        // Core Circle
+        // Core Node Body
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 11 : 7, 0, Math.PI * 2);
         
@@ -194,7 +197,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Flash cue on focus
+        // Brief flash animation on focus
         if (isFlashing) {
           ctx.beginPath();
           ctx.arc(x, y, 35, 0, Math.PI * 2);
@@ -203,7 +206,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.stroke();
         }
 
-        // Label
+        // Title/Role Text
         ctx.shadowBlur = 0;
         ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffff33' : '#33ffff') : (isActive ? '#33ff33' : '#888');
         if (isFadingNode) ctx.fillStyle = `rgba(51, 255, 255, ${fadeAlpha})`;
@@ -212,7 +215,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.fillText(role.toUpperCase(), x, y - 22);
       });
 
-      // Center Hub
+      // Continuum Hub (Center)
       ctx.beginPath();
       ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
       ctx.fillStyle = isProcessing ? '#ffff33' : '#ff3333';
@@ -246,7 +249,7 @@ export const AgentVisualizer: React.FC<Props> = ({
 
       <canvas ref={canvasRef} width={300} height={300} className="w-full max-w-[300px]" />
 
-      {/* Guidance Tooltip */}
+      {/* Dynamic Interaction Tooltip */}
       {focusedAgent && (
         <div className="absolute top-[22%] right-6 flex flex-col items-end gap-1.5 pointer-events-none max-w-[160px] text-right bg-black/70 p-2 border border-white/10 backdrop-blur-md rounded-sm">
            <span className="text-[7px] font-black uppercase text-neutral-400 tracking-[0.2em] leading-tight flex items-center gap-1">
@@ -259,17 +262,17 @@ export const AgentVisualizer: React.FC<Props> = ({
            )}
            {isFocusLocked && (
              <span className="text-[7px] font-black uppercase text-yellow-500 tracking-[0.2em] leading-tight mt-1">
-                Isolation Locked. Verification phase active.
+                Continuum target verified.
              </span>
            )}
         </div>
       )}
 
-      {/* Clear Focus Button */}
+      {/* Prominent Clear Focus Button */}
       {focusedAgent && (
         <button 
           onClick={(e) => { e.stopPropagation(); onBackgroundClick(); }}
-          className="absolute bottom-12 right-6 flex items-center gap-2 bg-[#440000]/90 hover:bg-red-700 border border-red-500 text-white text-[10px] font-black uppercase px-6 py-2.5 rounded-sm transition-all shadow-[0_0_20px_rgba(255,0,0,0.5)] active:scale-95 group z-10"
+          className="absolute bottom-12 right-6 flex items-center gap-2 bg-[#440000]/95 hover:bg-red-700 border border-red-500 text-white text-[10px] font-black uppercase px-6 py-2.5 rounded-sm transition-all shadow-[0_0_25px_rgba(255,0,0,0.6)] active:scale-95 group z-10"
         >
           <X size={12} className="group-hover:rotate-90 transition-transform" />
           Clear Focus

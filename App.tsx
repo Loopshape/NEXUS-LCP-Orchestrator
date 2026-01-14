@@ -71,15 +71,15 @@ const App: React.FC = () => {
   }, [readiness, isProcessing, history, focusedAgent]);
 
   const handleAgentClick = (role: AgentRole) => {
-    // When focus is locked, single clicks on other agent nodes should be ignored.
+    // If focus is locked, single clicks on other agent nodes should be ignored.
     if (isFocusLocked) return;
 
-    // Toggles focus state: if already focused, unfocus; otherwise focus.
+    // Toggles focus: if already focused, unfocus it.
     setFocusedAgent(prev => (prev === role ? null : role));
   };
 
   const handleAgentDblClick = (role: AgentRole) => {
-    // Double-click action toggles the 'Focus Lock' state.
+    // Double-click toggles Focus Lock state.
     if (focusedAgent === role) {
       setIsFocusLocked(!isFocusLocked);
     } else {
@@ -90,7 +90,7 @@ const App: React.FC = () => {
   };
 
   const handleBackgroundClick = () => {
-    // Clicking the canvas background should always clear any active agent focus and lock.
+    // Background click clears everything.
     setFocusedAgent(null);
     setIsFocusLocked(false);
   };
@@ -111,7 +111,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Panel: Stats & Controls */}
+      {/* Stats & System Overview Panel */}
       <aside className="window-panel">
         <div className="window-header">
            <span>System_OS :: Extraction</span>
@@ -163,7 +163,7 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Panel: Continuum Workspace */}
+      {/* Main Workspace (Trace Output) Panel */}
       <main className="window-panel">
         <div className="window-header">
            <div className="flex items-center gap-2">
@@ -207,7 +207,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Panel: Network Topology */}
+      {/* Network Topology Visualization Panel */}
       <aside className="window-panel">
         <div className="window-header">
            <div className="flex items-center gap-2">

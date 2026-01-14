@@ -56,14 +56,14 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
         </div>
 
         <div className="flex-grow overflow-y-auto p-6 space-y-8">
-          {/* Cognitive Pathways - Visual flow representation */}
+          {/* Cognitive Pathways Section */}
           <section className="space-y-4">
              <div className="flex items-center gap-2 text-[10px] font-black neon-blue uppercase tracking-[0.5em]">
                 <Share2 size={14} /> Cognitive Pathways
              </div>
              <div className="grid grid-cols-3 items-center bg-black/60 p-6 border-2 border-white/5 rounded-sm relative shadow-inner">
                 <div 
-                  className="flex flex-col items-center gap-2 group cursor-help" 
+                  className="flex flex-col items-center gap-2 group cursor-help transition-all hover:scale-105" 
                   title={`Logical input vector received from upstream ensemble node: ${prevAgent}`}
                 >
                     <Zap size={24} className="neon-yellow" />
@@ -72,10 +72,10 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
                 </div>
                 <div className="flex flex-col items-center justify-center px-4">
                     <div className="h-[2px] w-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 animate-pulse" />
-                    <span className="text-[6px] font-black text-neutral-700 uppercase mt-2">Logic_Domain</span>
+                    <span className="text-[6px] font-black text-neutral-800 uppercase mt-2">Continuum_Domain</span>
                 </div>
                 <div 
-                  className="flex flex-col items-center gap-2 group cursor-help" 
+                  className="flex flex-col items-center gap-2 group cursor-help transition-all hover:scale-105" 
                   title={`Semantic emission transmitted to downstream ensemble node: ${nextAgent}`}
                 >
                     <Network size={24} className="neon-green" />
@@ -85,7 +85,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
              </div>
           </section>
 
-          {/* Details Grid */}
+          {/* Epistemic Details Grid */}
           <section className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-[10px] font-black neon-red uppercase tracking-[0.4em]"><Shield size={14} /> Epistemic Domain</div>
@@ -114,7 +114,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
             </div>
           </section>
 
-          {/* System Prompt Logic */}
+          {/* System Prompt Logic Section */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[10px] font-black neon-yellow uppercase tracking-[0.4em]">
@@ -122,7 +122,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
               </div>
               <button 
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 text-[9px] font-black uppercase text-neutral-400 hover:text-white transition-all bg-white/5 px-3 py-1.5 rounded border border-white/10 hover:border-white/30"
+                className="flex items-center gap-1.5 text-[9px] font-black uppercase text-neutral-400 hover:text-white transition-all bg-white/5 px-3 py-1.5 rounded border border-white/10 hover:border-white/30 active:scale-95"
               >
                 {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                 {copied ? 'Copied' : 'Copy Prompt'}

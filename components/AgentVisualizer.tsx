@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AgentRole } from '../types';
 import { AGGREGATION_ORDER } from '../constants';
-import { Lock, Target, X, Info, Zap, Network } from 'lucide-react';
+import { Lock, Target, X, Info } from 'lucide-react';
 
 interface Props {
   isProcessing: boolean;
@@ -20,7 +20,7 @@ export const AgentVisualizer: React.FC<Props> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [flashNode, setFlashNode] = useState<AgentRole | null>(null);
   const [previousFocused, setPreviousFocused] = useState<AgentRole | null>(null);
-  const [fadeAlpha, setFadeAlpha] = useState(0); // For the fade-out effect
+  const [fadeAlpha, setFadeAlpha] = useState(0); // For focus indicator decay
 
   useEffect(() => {
     if (focusedAgent) {
@@ -28,10 +28,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         setFlashNode(focusedAgent);
         setTimeout(() => setFlashNode(null), 400);
       }
-      setFadeAlpha(1); // Reset fade alpha to full when focused
-    } else if (previousFocused) {
-      // Just lost focus, trigger fade out over time
-      // This is handled in the render loop by decaying the value
+      setFadeAlpha(1);
     }
     setPreviousFocused(focusedAgent);
   }, [focusedAgent]);
@@ -98,7 +95,7 @@ export const AgentVisualizer: React.FC<Props> = ({
       const radius = 90;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
-      // Handle fade decay
+      // Handle focus indicator fade out
       if (!focusedAgent && fadeAlpha > 0) {
         setFadeAlpha(prev => Math.max(0, prev - 0.05));
       }
@@ -120,12 +117,13 @@ export const AgentVisualizer: React.FC<Props> = ({
         const y = centerY + Math.sin(angle) * radius;
         const isActive = activeAgents.includes(role);
         const isFocused = focusedAgent === role;
+        const isFading = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
         
-        if (isFocused || (!focusedAgent && fadeAlpha > 0 && role === previousFocused)) {
+        if (isFocused || isFading) {
           const currentAlpha = isFocused ? 1 : fadeAlpha;
           ctx.strokeStyle = isFocusLocked ? `rgba(255, 255, 51, ${currentAlpha})` : `rgba(51, 255, 255, ${currentAlpha})`;
           ctx.lineWidth = 2.5 * currentAlpha;
@@ -154,7 +152,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isFlashing = flashNode === role;
         const isFadingNode = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
-        // Visual Status Glows
+        // Node Glows
         if (isFocused || isFadingNode) {
           const currentAlpha = isFocused ? 1 : fadeAlpha;
           const haloSize = (isFocusLocked ? 30 : (25 + Math.sin(time / 200) * 5)) * currentAlpha;
@@ -176,7 +174,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.fill();
         }
 
-        // Core Node
+        // Core Circle
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 11 : 7, 0, Math.PI * 2);
         
@@ -196,7 +194,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Brief Flash cue
+        // Flash cue on focus
         if (isFlashing) {
           ctx.beginPath();
           ctx.arc(x, y, 35, 0, Math.PI * 2);
@@ -205,7 +203,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.stroke();
         }
 
-        // Title Label
+        // Label
         ctx.shadowBlur = 0;
         ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffff33' : '#33ffff') : (isActive ? '#33ff33' : '#888');
         if (isFadingNode) ctx.fillStyle = `rgba(51, 255, 255, ${fadeAlpha})`;
@@ -214,7 +212,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.fillText(role.toUpperCase(), x, y - 22);
       });
 
-      // Hub
+      // Center Hub
       ctx.beginPath();
       ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
       ctx.fillStyle = isProcessing ? '#ffff33' : '#ff3333';
@@ -256,12 +254,12 @@ export const AgentVisualizer: React.FC<Props> = ({
            </span>
            {!isFocusLocked && (
              <span className="text-[7px] font-black uppercase text-blue-500/80 tracking-[0.2em] leading-tight mt-1">
-                Dbl-click node to engage Lock.
+                Dbl-click node to toggle Lock.
              </span>
            )}
            {isFocusLocked && (
              <span className="text-[7px] font-black uppercase text-yellow-500 tracking-[0.2em] leading-tight mt-1">
-                Isolation locked. Verified target.
+                Isolation Locked. Verification phase active.
              </span>
            )}
         </div>

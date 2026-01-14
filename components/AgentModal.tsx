@@ -56,7 +56,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
         </div>
 
         <div className="flex-grow overflow-y-auto p-6 space-y-8">
-          {/* Cognitive Pathways - Visual representation of data flow */}
+          {/* Cognitive Pathways - Visual flow representation */}
           <section className="space-y-4">
              <div className="flex items-center gap-2 text-[10px] font-black neon-blue uppercase tracking-[0.5em]">
                 <Share2 size={14} /> Cognitive Pathways
@@ -72,7 +72,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
                 </div>
                 <div className="flex flex-col items-center justify-center px-4">
                     <div className="h-[2px] w-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 animate-pulse" />
-                    <span className="text-[6px] font-black text-neutral-700 uppercase mt-2">Enforcement_Domain</span>
+                    <span className="text-[6px] font-black text-neutral-700 uppercase mt-2">Logic_Domain</span>
                 </div>
                 <div 
                   className="flex flex-col items-center gap-2 group cursor-help" 
@@ -118,7 +118,7 @@ export const AgentModal: React.FC<Props> = ({ role, isFocused, onClose }) => {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[10px] font-black neon-yellow uppercase tracking-[0.4em]">
-                <Terminal size={14} /> Kernel Kernel Instruction
+                <Terminal size={14} /> Kernel Instruction
               </div>
               <button 
                 onClick={handleCopy}

@@ -95,12 +95,11 @@ export const AgentVisualizer: React.FC<Props> = ({
       const radius = 90;
       const angleStep = (Math.PI * 2) / AGGREGATION_ORDER.length;
 
-      // Focus indicator decay
       if (!focusedAgent && fadeAlpha > 0) {
         setFadeAlpha(prev => Math.max(0, prev - 0.05));
       }
 
-      // Topology Grid
+      // Draw Topology Grid
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < canvas.width; i += 30) {
@@ -152,10 +151,10 @@ export const AgentVisualizer: React.FC<Props> = ({
         const isFlashing = flashNode === role;
         const isFadingNode = !focusedAgent && fadeAlpha > 0 && role === previousFocused;
 
-        // Visual Status Glows
-        // - Focus Locked: static yellow glow (no pulsing)
-        // - Focused (Unlocked): bright cyan pulsing glow
-        // - Active but not focused: subtle green glow
+        // Visual States as requested:
+        // 1. Subtle green glow for active but not focused
+        // 2. Bright cyan pulsing glow for focused but not locked
+        // 3. Static yellow glow for focus locked
         if (isFocused || isFadingNode) {
           const currentAlpha = isFocused ? 1 : fadeAlpha;
           const pulse = isFocusLocked ? 1 : (1 + Math.sin(time / 200) * 0.2);
@@ -178,7 +177,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.fill();
         }
 
-        // Core Node Body
+        // Node Body
         ctx.beginPath();
         ctx.arc(x, y, isFocused ? 12 : 8, 0, Math.PI * 2);
         
@@ -198,7 +197,6 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Brief flash on focus
         if (isFlashing) {
           ctx.beginPath();
           ctx.arc(x, y, 40, 0, Math.PI * 2);
@@ -207,7 +205,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           ctx.stroke();
         }
 
-        // Role Indicator Text
+        // Label
         ctx.shadowBlur = 0;
         ctx.fillStyle = isFocused ? (isFocusLocked ? '#ffff33' : '#33ffff') : (isActive ? '#33ff33' : '#666');
         if (isFadingNode) ctx.fillStyle = `rgba(51, 255, 255, ${fadeAlpha})`;
@@ -216,7 +214,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         ctx.fillText(role.toUpperCase(), x, y - 24);
       });
 
-      // Central Processing Hub
+      // Hub
       ctx.beginPath();
       ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
       ctx.fillStyle = isProcessing ? '#ffff33' : (activeAgents.length > 0 ? '#33ff33' : '#ff3333');
@@ -242,7 +240,7 @@ export const AgentVisualizer: React.FC<Props> = ({
         <div className={`flex items-center gap-3 px-5 py-2 rounded-full border bg-black/80 backdrop-blur-xl transition-all duration-500 shadow-2xl ${focusedAgent ? (isFocusLocked ? 'border-yellow-500 scale-105 shadow-[0_0_30px_rgba(255,255,51,0.4)]' : 'border-blue-500 scale-100 shadow-[0_0_20px_rgba(51,255,255,0.2)]') : 'border-neutral-800 opacity-60'}`}>
           <Target size={14} className={isFocusLocked ? 'neon-yellow' : 'neon-blue'} />
           <span className={`text-[11px] font-black uppercase tracking-[0.25em] ${isFocusLocked ? 'neon-yellow' : (focusedAgent ? 'neon-blue' : 'text-neutral-500')}`}>
-            {focusedAgent ? (isFocusLocked ? `FOCUS LOCKED: ${focusedAgent}` : `PROBE ISOLATION: ${focusedAgent}`) : 'SYSTEM_TOPOLOGY_ACTIVE'}
+            {isFocusLocked ? 'FOCUS LOCKED' : (focusedAgent ? `PROBE ISOLATION: ${focusedAgent}` : 'SYSTEM_TOPOLOGY_ACTIVE')}
           </span>
           {isFocusLocked && <Lock size={12} className="neon-yellow animate-pulse" />}
         </div>
@@ -250,7 +248,7 @@ export const AgentVisualizer: React.FC<Props> = ({
 
       <canvas ref={canvasRef} width={300} height={300} className="w-full max-w-[300px] cursor-crosshair" />
 
-      {/* Dynamic Interaction Tooltip */}
+      {/* Guidance Tooltip */}
       {focusedAgent && (
         <div className="absolute top-[25%] right-8 flex flex-col items-end gap-2 pointer-events-none max-w-[180px] text-right bg-black/80 p-3 border border-white/10 backdrop-blur-md rounded shadow-2xl">
            <span className="text-[8px] font-black uppercase text-neutral-400 tracking-[0.2em] leading-tight flex items-center gap-1.5">
@@ -276,7 +274,7 @@ export const AgentVisualizer: React.FC<Props> = ({
           className="absolute bottom-14 right-8 flex items-center gap-3 bg-[#660000]/90 hover:bg-red-600 border border-red-400 text-white text-[10px] font-black uppercase px-8 py-3 rounded-sm transition-all shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:shadow-[0_0_40px_rgba(255,0,0,0.8)] active:scale-95 group z-20"
         >
           <X size={14} className="group-hover:rotate-90 transition-transform duration-300" />
-          Clear Isolation
+          Clear Focus
         </button>
       )}
 
